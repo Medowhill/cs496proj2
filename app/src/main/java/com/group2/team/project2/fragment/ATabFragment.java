@@ -45,6 +45,7 @@ import java.util.Arrays;
 import android.os.Handler;
 
 import static com.facebook.FacebookSdk.getApplicationContext;
+import static junit.framework.Assert.assertNotNull;
 
 public class ATabFragment extends Fragment {
 
@@ -52,6 +53,7 @@ public class ATabFragment extends Fragment {
     private EditText etMessage;
     private TextView tvRecvData;
     private String url ="http://143.248.49.125:8000";
+    private String ownID="";
 
     public ATabFragment() {
     }
@@ -69,7 +71,7 @@ public class ATabFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_a, container, false);
 
         LoginButton loginButton = (LoginButton) rootView.findViewById(R.id.login_button);
-        loginButton.setReadPermissions(Arrays.asList("public_profile", "email"));
+        loginButton.setReadPermissions(Arrays.asList("public_profile", "email", "user_friends", "read_custom_friendlists"));
         // If using in a fragment
         loginButton.setFragment(this);
         // Other app specific specialization
@@ -82,6 +84,11 @@ public class ATabFragment extends Fragment {
                     @Override
                     public void onCompleted(JSONObject object, GraphResponse response) {
                         Log.v("result",object.toString());
+                        try {
+                            ownID = object.getJSONObject("id").toString();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
                 });
 
@@ -158,28 +165,129 @@ public class ATabFragment extends Fragment {
                     }
                 }.start();
 
+                /*
+                AccessToken token = AccessToken.getCurrentAccessToken();
+                GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
+                    @Override
+                    public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
+                        try {
+                            Log.d("JSONOBJECT", jsonObject.toString());
+                            JSONObject jsonArrayFriend = jsonObject.getJSONObject("friendlists");
+                            JSONArray jsonArrayFriends = jsonObject.getJSONObject("friendlists").getJSONArray("data");
+                            Log.d("JSONFriend", jsonArrayFriend.toString());
+                            Log.d("JSONFriends", jsonArrayFriends.toString());
+                            JSONObject friendlistObject = jsonArrayFriends.getJSONObject(0);
+                            String friendListID = friendlistObject.getString("id");
+                            //myNewGraphReq(friendListID);
+                            Log.d("JSONID", friendListID.toString());
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                Bundle param = new Bundle();
+                param.putString("fields", "id, name, friends, friendlists");
+                graphRequest.setParameters(param);
+                graphRequest.executeAsync();
+                */
+
+                AccessToken token = AccessToken.getCurrentAccessToken();
+                GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
+                    @Override
+                    public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
+                        try {
+                            ownID = jsonObject.getString("id");
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                Bundle param = new Bundle();
+                param.putString("fields", "id, name");
+                graphRequest.setParameters(param);
+                graphRequest.executeAsync();
+
+
+                tvRecvData.setText(ownID);
+
                 /* make the API call */
-                new GraphRequest(
+                param = new Bundle();
+                param.putString("fields", "name,id");
+                GraphRequest friend = new GraphRequest(
                         AccessToken.getCurrentAccessToken(),
-                        "/{friend-list-id}",
-                        null,
+                        "/10210835687305905/taggable_friends",
+                        param,
                         HttpMethod.GET,
                         new GraphRequest.Callback() {
                             public void onCompleted(GraphResponse response) {
-                                Log.d("response", response.toString());
-                                /* handle the result */
+                                Log.d("Members", response.toString());
                             }
                         }
-                ).executeAsync();
+                );
+                friend.setParameters(param);
+                friend.executeAsync();
+
+                new Thread(){
+                    public void run(){
+                        /* make the API call */
+                        Bundle param = new Bundle();
+                        param.putString("fields", "name,id");
+                        GraphRequest friend = new GraphRequest(
+                                AccessToken.getCurrentAccessToken(),
+                                "/10210835687305905/taggable_friends",
+                                param,
+                                HttpMethod.GET,
+                                new GraphRequest.Callback() {
+                                    public void onCompleted(GraphResponse response) {
+                                        Log.d("Members", response.toString());
+                                    }
+                                }
+                        );
+                        friend.setParameters(param);
+
+                        GraphResponse response = friend.executeAndWait();
+                        GraphRequest nextRequest = response.getRequestForPagedResults(GraphResponse.PagingDirection.NEXT);
+                        assertNotNull(response.getJSONObject());
+                        Log.d("helloMonkey", response.toString());
+                        nextRequest.setCallback(friend.getCallback());
+                        response = nextRequest.executeAndWait();
+                    }
+                }.start();
+
+
             }
         });
 
         return rootView;
     }
 
-    public void setMessage(String msg){
-        tvRecvData.setText(msg);	// 받은 메시지를 화면에 보여주기
+    /*
+    private void myNewGraphReq(String friendlistId) {
+        final String graphPath = "/"+friendlistId+"/members/";
+        AccessToken token = AccessToken.getCurrentAccessToken();
+        GraphRequest request = new GraphRequest(token, graphPath, null, HttpMethod.GET, new GraphRequest.Callback() {
+            @Override
+            public void onCompleted(GraphResponse graphResponse) {
+                JSONObject object = graphResponse.getJSONObject();
+                Log.d("FriendJSONOBJECT", object.toString());
+                try {
+                    JSONArray arrayOfUsersInFriendList= object.getJSONArray("data");
+                // Do something with the user list
+                // ex: get first user in list, "name"
+                    JSONObject user = arrayOfUsersInFriendList.getJSONObject(0);
+                    String usersName = user.getString("name");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        Bundle param = new Bundle();
+        param.putString("fields", "name");
+        request.setParameters(param);
+        request.executeAsync();
     }
+    */
 
 
     private String GetByHttp() throws IOException {
