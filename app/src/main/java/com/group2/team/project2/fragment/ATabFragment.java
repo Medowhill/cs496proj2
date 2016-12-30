@@ -63,6 +63,7 @@ public class ATabFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
+        // 여기부터 facebook login button (Gradle, manifests, fragment_a.xml 참조
         callbackManager = CallbackManager.Factory.create();
 
         View rootView = inflater.inflate(R.layout.fragment_a, container, false);
@@ -100,6 +101,7 @@ public class ATabFragment extends Fragment {
                 Log.e("LoginErr", exception.toString());
             }
         });
+        //여기까지 facebook login
 
 
         //Testing Get button with Server
