@@ -17,22 +17,6 @@
         android:layout_marginTop="30dp"
         android:layout_marginBottom="30dp" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal" >
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="보내는 메시지 : " />
-
-        <EditText
-            android:id="@+id/et_message"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:ems="10" />
-    </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -55,24 +39,6 @@
             android:layout_marginTop="50dp"
             android:layout_marginLeft="50dp"/>
 
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
-        android:orientation="horizontal" >
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="받은 메시지 : " />
-
-        <TextView
-            android:id="@+id/tv_recvData"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="받은 메시지가 없습니다." />
     </LinearLayout>
 
 </LinearLayout>

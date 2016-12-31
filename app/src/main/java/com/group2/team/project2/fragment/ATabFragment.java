@@ -9,6 +9,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,7 +32,11 @@ import com.facebook.appevents.AppEventsLogger;
 import com.facebook.internal.Utility;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.group2.team.project2.EventBus;
 import com.group2.team.project2.R;
+import com.group2.team.project2.event.AResultEvent;
+import com.group2.team.project2.event.BResultEvent;
+import com.squareup.otto.Subscribe;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -50,6 +56,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
+
 import android.os.Handler;
 import android.widget.Toast;
 
@@ -61,10 +68,10 @@ public class ATabFragment extends Fragment {
     private CallbackManager callbackManager;
     private EditText etMessage;
     private TextView tvRecvData;
-    private String url ="http://143.248.49.125:8000";
-    private String ownID="";
+    private String url = "http://143.248.49.125:8000";
+    private String ownID = "10210835687305905";
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
-    private String ownEmail="";
+    private String ownEmail = "ymk1211@hotmail.com";
 
     public ATabFragment() {
     }
@@ -74,9 +81,16 @@ public class ATabFragment extends Fragment {
     }
 
     @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        EventBus.getInstance().register(this);
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
-        // 여기부터 facebook login button (Gradle, manifests, fragment_a.xml 참조
+        // Facebook Login Button part
+        // 여기부터 facebook login button (Gradle, manifests, fragment_a.xml 참조)
         callbackManager = CallbackManager.Factory.create();
 
         View rootView = inflater.inflate(R.layout.fragment_a, container, false);
@@ -94,7 +108,7 @@ public class ATabFragment extends Fragment {
                 GraphRequest graphRequest = GraphRequest.newMeRequest(loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
                     @Override
                     public void onCompleted(JSONObject object, GraphResponse response) {
-                        Log.v("result",object.toString());
+                        Log.v("result", object.toString());
                         try {
                             ownID = object.getString("id");
                             ownEmail = object.getString("email");
@@ -122,174 +136,134 @@ public class ATabFragment extends Fragment {
         });
         //여기까지 facebook login
 
-        try {
-            queryContact();
-        } catch (JSONException e) {
-            e.printStackTrace();
+
+        // Get ID and Email
+        if (isLoggedIn()) {
+            AccessToken token = AccessToken.getCurrentAccessToken();
+            GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
+                @Override
+                public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
+                    try {
+                        ownID = jsonObject.getString("id");
+                        Log.d("LOGGED IN", ownID);
+                        ownEmail = jsonObject.getString("email");
+                        Log.d("my own ID", ownID);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+            Bundle param = new Bundle();
+            param.putString("fields", "id, name, email");
+            graphRequest.setParameters(param);
+            graphRequest.executeAsync();
         }
 
-
-        //Testing Get button with Server
+        //Get buttons
         Button postButton = (Button) rootView.findViewById(R.id.message_post);
         Button getButton = (Button) rootView.findViewById(R.id.message_get);
-        etMessage = (EditText) rootView.findViewById(R.id.et_message);
-        tvRecvData = (TextView) rootView.findViewById(R.id.tv_recvData);
         final Handler handler = new Handler();
 
         postButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new Thread(){
-                    public void run() {
-                        String sMessage = etMessage.getText().toString(); // 보내는 메시지를 받아옴
-                        try {
-                            SendToHttp(sMessage); // 메시지를 서버로 보냄
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }.start();
+                try {
+                    CrawlPostView();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
+
         });
 
         getButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                new Thread(){
-                    public void run(){
-                        try {
-                            String result = GetByHttp(); // 메시지를 받아옴
-                            Log.d("result", result);
-                            final JSONObject obj = new JSONObject(result);
-                            Log.d("Test", obj.toString());
-                            Log.d("JSON", obj.get("message").toString());
-                            handler.post(new Runnable() {
-                                public void run() {
-                                    try {
-                                        tvRecvData.setText(obj.get("message").toString());
-                                    } catch (JSONException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            });
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        //String[][] parsedData = jsonParserList(); // 받은 메시지를 json 파싱
-                    }
-                }.start();
-
-                /*
-                AccessToken token = AccessToken.getCurrentAccessToken();
-                GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
-                    @Override
-                    public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
-                        try {
-                            ownID = jsonObject.getString("id");
-                            ownEmail = jsonObject.getString("email");
-                            Log.d("my own ID", ownID);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-                Bundle param = new Bundle();
-                param.putString("fields", "id, name");
-                graphRequest.setParameters(param);
-                graphRequest.executeAsync();
-                */
-
-
-                Bundle param = new Bundle();
-                param.putString("fields", "name,id");
-                new GraphRequest(
-                        AccessToken.getCurrentAccessToken(),
-                        "/10210835687305905/taggable_friends",
-                        param,
-                        HttpMethod.GET,
-                        new GraphRequest.Callback() {
-                            public void onCompleted(GraphResponse response) {
-                                JSONObject a = response.getJSONObject();
-                                Log.d("FriendsJSON:", a.toString());
-                                Log.d("Friends:", response.toString());
-                                GraphRequest nextRequest = response.getRequestForPagedResults(GraphResponse.PagingDirection.NEXT);
-                                if (nextRequest != null) {
-                                    Bundle parameters = new Bundle();
-                                    nextRequest.setParameters(parameters);
-                                    nextRequest.setCallback(this);
-                                    nextRequest.executeAsync();
-                                }
-                            }
-                        }
-                ).executeAsync();
+                try {
+                    GetView();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         });
 
         return rootView;
     }
 
-    private void queryContact() throws JSONException {
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        EventBus.getInstance().unregister(this);
+    }
+
+    public boolean isLoggedIn() {
+        AccessToken accessToken = AccessToken.getCurrentAccessToken();
+        return accessToken != null;
+    }
+
+    // Contact 가져올 때 첫번째로 부르는 함수
+    private JSONArray queryContact() throws JSONException {
+        JSONArray contactArray = new JSONArray();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getActivity().checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
         } else {
-            readContact();
+            contactArray = readContact();
         }
+        return contactArray;
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
-        if(requestCode == PERMISSIONS_REQUEST_READ_CONTACTS){
-            if(grantResults[0]==PackageManager.PERMISSION_GRANTED){
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        JSONArray contactArray = new JSONArray();
+        if (requestCode == PERMISSIONS_REQUEST_READ_CONTACTS) {
+            if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 try {
-                    readContact();
+                    contactArray = readContact();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-            }
-            else{
-                Toast.makeText(getActivity(), "Permission Denied",Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(getActivity(), "Permission Denied", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
-    public class ContactInfo{
-        public String mobileNumber="";
-        public String name="";
+    public class ContactInfo {
+        public String mobileNumber = "";
+        public String name = "";
         public String id;
-        public String homeNumber="";
-        public String workNumber="";
+        public String homeNumber = "";
+        public String workNumber = "";
 
-        public ContactInfo(String name, String number, String id){
-            this.name=name;
-            mobileNumber=number;
-            this.id=id;
+        public ContactInfo(String name, String number, String id) {
+            this.name = name;
+            mobileNumber = number;
+            this.id = id;
         }
 
-        public ContactInfo(String name, String id){
-            this.name=name;
-            this.id=id;
+        public ContactInfo(String name, String id) {
+            this.name = name;
+            this.id = id;
         }
 
         @Override
-        public String toString(){
-            String tostr="";
-            if(mobileNumber.length()>1)
-                tostr=tostr+"\nmobile:"+mobileNumber;
-            if(homeNumber.length()>1)
-                tostr=tostr+"\nhome:"+homeNumber;
-            if(workNumber.length()>1)
-                tostr=tostr+"\nwork:"+workNumber;
+        public String toString() {
+            String tostr = "";
+            if (mobileNumber.length() > 1)
+                tostr = tostr + "\nmobile:" + mobileNumber;
+            if (homeNumber.length() > 1)
+                tostr = tostr + "\nhome:" + homeNumber;
+            if (workNumber.length() > 1)
+                tostr = tostr + "\nwork:" + workNumber;
             return tostr;
         }
     }
-    JSONObject json=new JSONObject();
+
     ArrayList<ContactInfo> contact;
-    private void readContact() throws JSONException {
+
+    private JSONArray readContact() throws JSONException {
+        JSONArray contactArray = new JSONArray();
         try {
             // Android version is lesser than 6.0 or the permission is already granted.
             contact = new ArrayList<ContactInfo>();
@@ -297,13 +271,13 @@ public class ATabFragment extends Fragment {
             Uri uri = ContactsContract.Contacts.CONTENT_URI;
 
             Cursor cur = cr.query(uri, null, null, null, null);
-            if (cur.getCount()>0){
+            if (cur.getCount() > 0) {
                 while (cur.moveToNext()) {
                     JSONObject j = new JSONObject();
                     String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
                     String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-                    j.put("NAME", name);
-                    ContactInfo c=new ContactInfo(name, id);
+                    j.put("Name", name);
+                    ContactInfo c = new ContactInfo(name, id);
                     String phone_num = "";
                     if (cur.getInt(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
                         Cursor pCur = getActivity().getContentResolver().query(
@@ -319,50 +293,41 @@ public class ATabFragment extends Fragment {
                             switch (phoneType) {
                                 case ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE:
                                     j.put("Mobile number", phoneNumber);
-                                    c.mobileNumber=phoneNumber;
+                                    c.mobileNumber = phoneNumber;
                                     break;
                                 case ContactsContract.CommonDataKinds.Phone.TYPE_HOME:
                                     j.put("Home number", phoneNumber);
-                                    c.homeNumber=phoneNumber;
+                                    c.homeNumber = phoneNumber;
                                     break;
                                 case ContactsContract.CommonDataKinds.Phone.TYPE_WORK:
                                     j.put("Work number", phoneNumber);
-                                    c.workNumber=phoneNumber;
+                                    c.workNumber = phoneNumber;
                                     break;
                                 default:
                                     break;
                             }
                         }
                         pCur.close();
-                        json.put(name, j);
                     }
-                    else
-                        json.put(name, (new JSONObject()).put("NAME", name));
                     contact.add(c);
+                    contactArray.put(j);
                 }
             }
-
-        }catch(JSONException e){
+        } catch (JSONException e) {
             throw new JSONException(e.getMessage());
         }
-        Log.d("Contact", json.toString());
+        return contactArray;
     }
+    // 요까지 Contact 가져오는거 함수들
 
-    public boolean isLoggedIn() {
-        AccessToken accessToken = AccessToken.getCurrentAccessToken();
-        return accessToken != null;
-    }
-
-    private String GetByHttp() throws IOException {
+    public void GetView() throws IOException {
         URL u = new URL(url);
         HttpURLConnection urlConnection = (HttpURLConnection) u.openConnection();
-        urlConnection.setConnectTimeout(3*1000);
-        urlConnection.setReadTimeout(3*1000);
+        urlConnection.setConnectTimeout(3 * 1000);
+        urlConnection.setReadTimeout(3 * 1000);
 
         urlConnection.setRequestMethod("GET");
-        // InputStream으로 서버로 부터 응답 헤더와 메시지를 읽어들이겠다는 옵션을 정의한다
         urlConnection.setDoInput(true);
-        //urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
 
         String response = "";
         String line;
@@ -370,30 +335,82 @@ public class ATabFragment extends Fragment {
         while ((line = br.readLine()) != null) {
             response += line;
         }
-        return response;
+
+        /* 쓰일 것 같음
+        new Thread(){
+                    public void run(){
+                        try {
+                            String result = GetByHttp(); // 메시지를 받아옴
+                            handler.post(new Runnable() {
+                                public void run() {
+                                    try {
+                                        tvRecvData.setText(obj.get("message").toString());
+                                    } catch (JSONException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            });
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }.start();
+         */
+
+        // String으로 받아서, JSON Array로 바꾸고, View 해줘야함
     }
 
-    private void SendToHttp(String msg) throws IOException, JSONException {
-        if (msg == null)
-            msg = "";
+
+    public void CrawlPostView() throws JSONException {
+        Log.d("OwnID", ownID);
+        JSONArray contactArray = queryContact(); //이 친구가 폰 Contact 불러오고
+        JSONArray facebookArray = getFacebookFriends(); // 이 친구가 Facebook Friends 불러오면 되고
+        Log.d("ContactArray", contactArray.toString());
+        Log.d("facebookArray", facebookArray.toString());
+        //jsonArray 합쳐줘야겠네
+        //SendToHttp(jsonArray);
+        //view();
+    }
+
+    public JSONArray getFacebookFriends() {
+        final JSONArray facebookJSON = new JSONArray();
+        Bundle param = new Bundle();
+        param.putString("fields", "name");
+        new GraphRequest(
+                AccessToken.getCurrentAccessToken(),
+                "/10210835687305905/taggable_friends",
+                param,
+                HttpMethod.GET,
+                new GraphRequest.Callback() {
+                    public void onCompleted(GraphResponse response) {
+                        facebookJSON.put(response.getJSONObject());
+                        JSONObject a = response.getJSONObject();
+                        Log.d("FriendsJSON:", a.toString());
+                        Log.d("Friends:", response.toString());
+                        GraphRequest nextRequest = response.getRequestForPagedResults(GraphResponse.PagingDirection.NEXT);
+                        if (nextRequest != null) {
+                            Bundle parameters = new Bundle();
+                            nextRequest.setParameters(parameters);
+                            nextRequest.setCallback(this);
+                            nextRequest.executeAsync();
+                        }
+                    }
+                }
+        ).executeAsync();
+        return facebookJSON;
+    }
+
+
+    private void SendToHttp(JSONArray contactArray) throws IOException, JSONException {
 
         JSONObject job = new JSONObject();
-        try{
-            job.put("phoneNum", "01000000000");
-            job.put("name", "test name");
-            job.put("address", "test address");
-            job.put("message", msg);
-        } catch (JSONException e1) {
-            e1.printStackTrace();
-        }
-        Log.d("JSONSEND", job.toString());
 
         // URL클래스의 생성자로 주소를 넘겨준다.
         URL u = new URL(url);
         // 해당 주소의 페이지로 접속을 하고, 단일 HTTP 접속을 하기위해 캐스트한다.
         HttpURLConnection urlConnection = (HttpURLConnection) u.openConnection();
-        //urlConnection.setConnectTimeout(3*1000);
-        //urlConnection.setReadTimeout(3*1000);
 
         // POST방식으로 요청한다.( 기본값은 GET )
         urlConnection.setRequestMethod("POST");
@@ -417,39 +434,22 @@ public class ATabFragment extends Fragment {
         os.flush();
         os.close();
 
+        // 밑에 있는 코드는, setDoInput 지우고, 지워보고 없어도 상관없으면 지우자.
         InputStream is = urlConnection.getInputStream();
         byte[] arr = new byte[is.available()];
         is.read(arr);
         is.close();
+    }
 
-        /*
-        // 스트림을 닫는다.
-
-        // 응답받은 메시지의 길이만큼 버퍼를 생성하여 읽어들이고, "EUC-KR"로 디코딩해서 읽어들인다.
-        BufferedReader br = new BufferedReader( new OutputStreamReader( urlConnection.getInputStream(), "EUC-KR" ), urlConnection.getContentLength() );
-
-        String buf;
-        // 표준출력으로 한 라인씩 출력
-        while( ( buf = br.readLine() ) != null ) {
-            System.out.println( buf );
-        }
-        // 스트림을 닫는다.
-        br.close();
-
-
-        try {
-            InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-            readStream(in);
-        } finally {
-            urlConnection.disconnect();
-        }
-        */
-
+    @SuppressWarnings("unused")
+    @Subscribe
+    public void onActivityResultEvent(@NonNull AResultEvent event) {
+        onActivityResult(event.getRequestCode(), event.getResultCode(), event.getData());
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        callbackManager.onActivityResult(requestCode, resultCode, data);
+        Log.i("cs496", requestCode + "," + resultCode);
+        callbackManager.onActivityResult(64206, resultCode, data);
     }
 }

@@ -12,6 +12,7 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 
 import com.facebook.FacebookSdk;
+import com.group2.team.project2.event.AResultEvent;
 import com.group2.team.project2.event.BResultEvent;
 import com.group2.team.project2.fragment.ATabFragment;
 import com.group2.team.project2.fragment.BTabFragment;
@@ -45,11 +46,16 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setupWithViewPager(mViewPager);
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.i("cs496", requestCode + ", " + resultCode);
-        EventBus.getInstance().post(BResultEvent.create(requestCode, resultCode, data));
+        if (requestCode > 10)
+            EventBus.getInstance().post(AResultEvent.create(requestCode, resultCode, data));
+        else
+            EventBus.getInstance().post(BResultEvent.create(requestCode, resultCode, data));
     }
+
 
     public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
 
