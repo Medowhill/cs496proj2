@@ -70,8 +70,8 @@ public class BTabFragment extends Fragment {
     public final static int REQUEST_GALLERY = 0, REQUEST_CAMERA = 1;
 
     private final int PERMISSION_REQUEST_STORAGE = 0;
-    private final String IP = "143.248.49.156";
-    private final int PORT = 8083;
+    private final String IP = "52.78.240.193";
+    private final int PORT = 3000;
 
     private LinearLayout layout;
     private FloatingActionButton fabAdd, fabCamera, fabGallery, fabCancel;
