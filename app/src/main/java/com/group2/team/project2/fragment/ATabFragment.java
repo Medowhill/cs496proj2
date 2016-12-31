@@ -1,7 +1,14 @@
 package com.group2.team.project2.fragment;
 
+import android.Manifest;
+import android.content.ContentResolver;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -41,8 +48,10 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 import java.util.Arrays;
 import android.os.Handler;
+import android.widget.Toast;
 
 import static com.facebook.FacebookSdk.getApplicationContext;
 import static junit.framework.Assert.assertNotNull;
@@ -54,6 +63,7 @@ public class ATabFragment extends Fragment {
     private TextView tvRecvData;
     private String url ="http://143.248.49.125:8000";
     private String ownID="";
+    private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
 
     public ATabFragment() {
     }
@@ -110,6 +120,12 @@ public class ATabFragment extends Fragment {
         });
         //여기까지 facebook login
 
+        try {
+            queryContact();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
 
         //Testing Get button with Server
         Button postButton = (Button) rootView.findViewById(R.id.message_post);
@@ -165,39 +181,13 @@ public class ATabFragment extends Fragment {
                     }
                 }.start();
 
-                /*
-                AccessToken token = AccessToken.getCurrentAccessToken();
-                GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
-                    @Override
-                    public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
-                        try {
-                            Log.d("JSONOBJECT", jsonObject.toString());
-                            JSONObject jsonArrayFriend = jsonObject.getJSONObject("friendlists");
-                            JSONArray jsonArrayFriends = jsonObject.getJSONObject("friendlists").getJSONArray("data");
-                            Log.d("JSONFriend", jsonArrayFriend.toString());
-                            Log.d("JSONFriends", jsonArrayFriends.toString());
-                            JSONObject friendlistObject = jsonArrayFriends.getJSONObject(0);
-                            String friendListID = friendlistObject.getString("id");
-                            //myNewGraphReq(friendListID);
-                            Log.d("JSONID", friendListID.toString());
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-                Bundle param = new Bundle();
-                param.putString("fields", "id, name, friends, friendlists");
-                graphRequest.setParameters(param);
-                graphRequest.executeAsync();
-                */
-
                 AccessToken token = AccessToken.getCurrentAccessToken();
                 GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
                     @Override
                     public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
                         try {
                             ownID = jsonObject.getString("id");
+                            Log.d("my own ID", ownID);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -209,23 +199,6 @@ public class ATabFragment extends Fragment {
                 graphRequest.executeAsync();
 
 
-                /* make the API call */
-                param = new Bundle();
-                param.putString("fields", "name,id");
-                GraphRequest friend = new GraphRequest(
-                        AccessToken.getCurrentAccessToken(),
-                        "/10210835687305905/taggable_friends",
-                        param,
-                        HttpMethod.GET,
-                        new GraphRequest.Callback() {
-                            public void onCompleted(GraphResponse response) {
-                                Log.d("Members", response.toString());
-                            }
-                        }
-                );
-                friend.executeAsync();
-
-                /* make the API call */
                 param = new Bundle();
                 param.putString("fields", "name,id");
                 new GraphRequest(
@@ -235,7 +208,9 @@ public class ATabFragment extends Fragment {
                         HttpMethod.GET,
                         new GraphRequest.Callback() {
                             public void onCompleted(GraphResponse response) {
-                                Log.d("Members4", response.toString());
+                                JSONObject a = response.getJSONObject();
+                                Log.d("FriendsJSON:", a.toString());
+                                Log.d("Friends:", response.toString());
                                 GraphRequest nextRequest = response.getRequestForPagedResults(GraphResponse.PagingDirection.NEXT);
                                 if (nextRequest != null) {
                                     Bundle parameters = new Bundle();
@@ -246,78 +221,127 @@ public class ATabFragment extends Fragment {
                             }
                         }
                 ).executeAsync();
-
-
-                new Thread(){
-                    public void run(){
-                        Bundle param = new Bundle();
-                        param.putString("fields", "name,id");
-                        GraphRequest friend = new GraphRequest(
-                                AccessToken.getCurrentAccessToken(),
-                                "/10210835687305905/taggable_friends",
-                                param,
-                                HttpMethod.GET,
-                                new GraphRequest.Callback() {
-                                    public void onCompleted(GraphResponse response) {
-                                        Log.d("Members2", response.toString());
-
-                                    }
-                                }
-                        );
-
-                        GraphResponse response = friend.executeAndWait();
-                        GraphRequest nextRequest = response.getRequestForPagedResults(GraphResponse.PagingDirection.NEXT);
-                        if (nextRequest!= null){
-                            nextRequest.setCallback(friend.getCallback());
-                            nextRequest.executeAndWait();
-                        }
-
-                        /*
-                        GraphResponse response = friend.executeAndWait();
-                        GraphRequest nextRequest = response.getRequestForPagedResults(GraphResponse.PagingDirection.NEXT);
-                        assertNotNull(response.getJSONObject());
-                        Log.d("helloMonkey", response.toString());
-                        nextRequest.setCallback(friend.getCallback());
-                        response = nextRequest.executeAndWait();
-                        */
-                    }
-                }.start();
-
-
-
-
             }
         });
 
         return rootView;
     }
 
-    /*
-    private void myNewGraphReq(String friendlistId) {
-        final String graphPath = "/"+friendlistId+"/members/";
-        AccessToken token = AccessToken.getCurrentAccessToken();
-        GraphRequest request = new GraphRequest(token, graphPath, null, HttpMethod.GET, new GraphRequest.Callback() {
-            @Override
-            public void onCompleted(GraphResponse graphResponse) {
-                JSONObject object = graphResponse.getJSONObject();
-                Log.d("FriendJSONOBJECT", object.toString());
+    private void queryContact() throws JSONException {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getActivity().checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
+            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
+        } else {
+            readContact();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
+        if(requestCode == PERMISSIONS_REQUEST_READ_CONTACTS){
+            if(grantResults[0]==PackageManager.PERMISSION_GRANTED){
                 try {
-                    JSONArray arrayOfUsersInFriendList= object.getJSONArray("data");
-                // Do something with the user list
-                // ex: get first user in list, "name"
-                    JSONObject user = arrayOfUsersInFriendList.getJSONObject(0);
-                    String usersName = user.getString("name");
+                    readContact();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
-        });
-        Bundle param = new Bundle();
-        param.putString("fields", "name");
-        request.setParameters(param);
-        request.executeAsync();
+            else{
+                Toast.makeText(getActivity(), "Permission Denied",Toast.LENGTH_SHORT).show();
+            }
+        }
     }
-    */
+
+    public class ContactInfo{
+        public String mobileNumber="";
+        public String name="";
+        public String id;
+        public String homeNumber="";
+        public String workNumber="";
+
+        public ContactInfo(String name, String number, String id){
+            this.name=name;
+            mobileNumber=number;
+            this.id=id;
+        }
+
+        public ContactInfo(String name, String id){
+            this.name=name;
+            this.id=id;
+        }
+
+        @Override
+        public String toString(){
+            String tostr="";
+            if(mobileNumber.length()>1)
+                tostr=tostr+"\nmobile:"+mobileNumber;
+            if(homeNumber.length()>1)
+                tostr=tostr+"\nhome:"+homeNumber;
+            if(workNumber.length()>1)
+                tostr=tostr+"\nwork:"+workNumber;
+            return tostr;
+        }
+    }
+    JSONObject json=new JSONObject();
+    ArrayList<ContactInfo> contact;
+    private void readContact() throws JSONException {
+        try {
+            // Android version is lesser than 6.0 or the permission is already granted.
+            contact = new ArrayList<ContactInfo>();
+            ContentResolver cr = getActivity().getContentResolver();
+            Uri uri = ContactsContract.Contacts.CONTENT_URI;
+
+            Cursor cur = cr.query(uri, null, null, null, null);
+            if (cur.getCount()>0){
+                while (cur.moveToNext()) {
+                    JSONObject j = new JSONObject();
+                    String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
+                    String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+                    j.put("NAME", name);
+                    ContactInfo c=new ContactInfo(name, id);
+                    String phone_num = "";
+                    if (cur.getInt(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
+                        Cursor pCur = getActivity().getContentResolver().query(
+                                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                                null,
+                                ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                                new String[]{id}, null);
+                        while (pCur.moveToNext()) {
+                            int phoneType = pCur.getInt(pCur.getColumnIndex(
+                                    ContactsContract.CommonDataKinds.Phone.TYPE));
+                            String phoneNumber = pCur.getString(pCur.getColumnIndex(
+                                    ContactsContract.CommonDataKinds.Phone.NUMBER));
+                            switch (phoneType) {
+                                case ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE:
+                                    j.put("Mobile number", phoneNumber);
+                                    c.mobileNumber=phoneNumber;
+                                    break;
+                                case ContactsContract.CommonDataKinds.Phone.TYPE_HOME:
+                                    j.put("Home number", phoneNumber);
+                                    c.homeNumber=phoneNumber;
+                                    break;
+                                case ContactsContract.CommonDataKinds.Phone.TYPE_WORK:
+                                    j.put("Work number", phoneNumber);
+                                    c.workNumber=phoneNumber;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        pCur.close();
+                        json.put(name, j);
+                    }
+                    else
+                        json.put(name, (new JSONObject()).put("NAME", name));
+                    contact.add(c);
+                }
+            }
+
+        }catch(JSONException e){
+            throw new JSONException(e.getMessage());
+        }
+        Log.d("Contact", json.toString());
+    }
 
 
     private String GetByHttp() throws IOException {
