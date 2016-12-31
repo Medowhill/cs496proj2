@@ -55,12 +55,6 @@ public class ATabFragment extends Fragment {
     }
 
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-        EventBus.getInstance().register(this);
-    }
-
-    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_a, container, false);
 
@@ -93,12 +87,6 @@ public class ATabFragment extends Fragment {
         });
 
         return rootView;
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        EventBus.getInstance().unregister(this);
     }
 
     // Contact 가져올 때 첫번째로 부르는 함수

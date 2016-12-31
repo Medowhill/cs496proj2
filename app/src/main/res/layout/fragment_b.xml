@@ -3,11 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin">
+    android:orientation="vertical">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/b_recyclerView"
@@ -20,8 +16,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|right"
-        android:layout_marginBottom="@dimen/fab_margin"
-        android:layout_marginRight="@dimen/fab_margin"
+        android:layout_marginBottom="@dimen/b_fab_outer_margin"
+        android:layout_marginRight="@dimen/b_fab_outer_margin"
         app:srcCompat="@drawable/b_add" />
 
     <LinearLayout
@@ -35,24 +31,24 @@
             android:id="@+id/b_fab_camera"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/fab_margin"
-            android:layout_marginRight="@dimen/fab_margin"
+            android:layout_marginBottom="@dimen/b_fab_outer_margin"
+            android:layout_marginRight="@dimen/b_fab_inner_margin"
             app:srcCompat="@drawable/b_camera" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/b_fab_gallery"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/fab_margin"
-            android:layout_marginRight="@dimen/fab_margin"
+            android:layout_marginBottom="@dimen/b_fab_outer_margin"
+            android:layout_marginRight="@dimen/b_fab_inner_margin"
             app:srcCompat="@drawable/b_gallery" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/b_fab_cancel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/fab_margin"
-            android:layout_marginRight="@dimen/fab_margin"
+            android:layout_marginBottom="@dimen/b_fab_outer_margin"
+            android:layout_marginRight="@dimen/b_fab_outer_margin"
             app:srcCompat="@drawable/b_cancel" />
     </LinearLayout>
 </FrameLayout>

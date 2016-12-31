@@ -35,6 +35,9 @@ import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.facebook.AccessToken;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.group2.team.project2.EventBus;
 import com.group2.team.project2.MainActivity;
 import com.group2.team.project2.R;
@@ -81,7 +84,7 @@ public class BTabFragment extends Fragment {
     private ArrayList<Thread> threads = new ArrayList<>();
     private SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmssSSS");
     private PreviewAdapter adapter;
-    private String currentPath;
+    private String currentPath, email;
 
     private Handler previewDataHandler = new Handler() {
         @Override
@@ -103,9 +106,9 @@ public class BTabFragment extends Fragment {
         @Override
         public void handleMessage(Message msg) {
             if (msg.arg1 == -1)
-                Toast.makeText(getContext(), "Fail..", Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), "Fail..", Toast.LENGTH_SHORT).show();
             else {
-                Toast.makeText(getContext(), "Success!!", Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), "Success!!", Toast.LENGTH_SHORT).show();
                 adapter.add((PhotoPreview) msg.obj);
                 recyclerView.smoothScrollToPosition(adapter.getItemCount() - 1);
             }
@@ -138,6 +141,23 @@ public class BTabFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         EventBus.getInstance().register(this);
+
+        AccessToken token = AccessToken.getCurrentAccessToken();
+        GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
+            @Override
+            public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
+                try {
+                    email = jsonObject.getString("email");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                getPhotoList();
+            }
+        });
+        Bundle param = new Bundle();
+        param.putString("fields", "email");
+        graphRequest.setParameters(param);
+        graphRequest.executeAsync();
     }
 
     @Override
@@ -258,8 +278,6 @@ public class BTabFragment extends Fragment {
                 intentToCamera();
             }
         });
-
-        getPhotoList();
         return rootView;
     }
 
@@ -334,6 +352,7 @@ public class BTabFragment extends Fragment {
                     connection.setDoInput(true);
                     connection.setUseCaches(false);
                     connection.setDefaultUseCaches(false);
+                    connection.setRequestProperty("email", email);
                     connection.setRequestProperty("tab", "B");
                     connection.setRequestProperty("type", "list");
 
@@ -448,6 +467,7 @@ public class BTabFragment extends Fragment {
                     connection.setRequestProperty("tab", "B");
                     connection.setRequestProperty("time", time);
                     connection.setRequestProperty("len", arrThumb.length + "");
+                    connection.setRequestProperty("email", email);
 
                     OutputStream outputStream = connection.getOutputStream();
                     outputStream.write(arrThumb);
@@ -492,6 +512,7 @@ public class BTabFragment extends Fragment {
                     connection.setRequestProperty("tab", "B");
                     connection.setRequestProperty("type", "photo");
                     connection.setRequestProperty("time", preview.getTime());
+                    connection.setRequestProperty("email", email);
 
                     InputStream inputStream = connection.getInputStream();
                     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -534,6 +555,7 @@ public class BTabFragment extends Fragment {
                     connection.setDefaultUseCaches(false);
                     connection.setRequestProperty("tab", "B");
                     connection.setRequestProperty("time", time);
+                    connection.setRequestProperty("email", email);
 
                     InputStream inputStream = connection.getInputStream();
                     byte[] arr = new byte[inputStream.available()];
