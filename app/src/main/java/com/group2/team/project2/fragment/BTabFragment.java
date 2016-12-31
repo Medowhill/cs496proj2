@@ -24,6 +24,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -32,8 +33,10 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.group2.team.project2.EventBus;
+import com.group2.team.project2.MainActivity;
 import com.group2.team.project2.R;
 import com.group2.team.project2.adapter.PreviewAdapter;
 import com.group2.team.project2.event.BResultEvent;
@@ -85,6 +88,27 @@ public class BTabFragment extends Fragment {
         public void handleMessage(Message msg) {
             PhotoPreview preview = (PhotoPreview) msg.obj;
             adapter.add(preview);
+        }
+    };
+
+    private Handler photoHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            byte[] arr = (byte[]) msg.obj;
+            ((MainActivity) getActivity()).setImageView(BitmapFactory.decodeByteArray(arr, 0, arr.length));
+        }
+    };
+
+    private Handler sendHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.arg1 == -1)
+                Toast.makeText(getContext(), "Fail..", Toast.LENGTH_LONG).show();
+            else {
+                Toast.makeText(getContext(), "Success!!", Toast.LENGTH_LONG).show();
+                adapter.add((PhotoPreview) msg.obj);
+                recyclerView.smoothScrollToPosition(adapter.getItemCount() - 1);
+            }
         }
     };
 
@@ -190,8 +214,20 @@ public class BTabFragment extends Fragment {
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new PreviewAdapter();
+        adapter = new PreviewAdapter(this);
         recyclerView.setAdapter(adapter);
+        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
+                //Remove swiped item from list and notify the RecyclerView
+                deletePhoto(adapter.remove((PreviewAdapter.ViewHolder) viewHolder));
+            }
+        }).attachToRecyclerView(recyclerView);
 
         fabAdd.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -375,6 +411,8 @@ public class BTabFragment extends Fragment {
 
     private void sendImage(InputStream inputStream) {
         showDialogHandler.sendEmptyMessage(0);
+
+        final String time = format.format(Calendar.getInstance().getTime());
         byte[] tmp;
         try {
             tmp = new byte[inputStream.available()];
@@ -386,16 +424,17 @@ public class BTabFragment extends Fragment {
         final byte[] arr = tmp;
 
         Bitmap temp = BitmapFactory.decodeByteArray(arr, 0, arr.length);
-        Bitmap bitmap = Bitmap.createScaledBitmap(temp, 50, 50, false);
+        final Bitmap bitmap = Bitmap.createScaledBitmap(temp, 100, 100, false);
         temp.recycle();
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
-        bitmap.recycle();
         final byte[] arrThumb = outputStream.toByteArray();
 
         new Thread() {
             @Override
             public void run() {
+                Message message = new Message();
+                message.arg1 = -1;
                 threads.add(this);
                 try {
                     URL url = new URL("http://" + IP + ":" + PORT);
@@ -407,7 +446,7 @@ public class BTabFragment extends Fragment {
                     connection.setUseCaches(false);
                     connection.setDefaultUseCaches(false);
                     connection.setRequestProperty("tab", "B");
-                    connection.setRequestProperty("time", format.format(Calendar.getInstance().getTime()));
+                    connection.setRequestProperty("time", time);
                     connection.setRequestProperty("len", arrThumb.length + "");
 
                     OutputStream outputStream = connection.getOutputStream();
@@ -420,12 +459,91 @@ public class BTabFragment extends Fragment {
                     byte[] arr = new byte[inputStream1.available()];
                     inputStream1.read(arr);
                     inputStream1.close();
+                    message.arg1 = 0;
+                    message.obj = new PhotoPreview(bitmap, time);
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
                 dismissDialogHandler.sendEmptyMessage(0);
+                sendHandler.sendMessage(message);
+                threads.remove(this);
+            }
+        }.start();
+    }
+
+    public void clickItem(int position) {
+        final PhotoPreview preview = adapter.get(position);
+        showDialogHandler.sendEmptyMessage(0);
+        new Thread() {
+            @Override
+            public void run() {
+                threads.add(this);
+                try {
+                    URL url = new URL("http://" + IP + ":" + PORT);
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+                    connection.setRequestMethod("GET");
+                    connection.setDoOutput(false);
+                    connection.setDoInput(true);
+                    connection.setUseCaches(false);
+                    connection.setDefaultUseCaches(false);
+                    connection.setRequestProperty("tab", "B");
+                    connection.setRequestProperty("type", "photo");
+                    connection.setRequestProperty("time", preview.getTime());
+
+                    InputStream inputStream = connection.getInputStream();
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+                    byte[] buf = new byte[1024 * 8];
+                    int length;
+                    while ((length = inputStream.read(buf)) != -1) {
+                        out.write(buf, 0, length);
+                    }
+                    byte[] arr = out.toByteArray();
+                    inputStream.close();
+
+                    Message message = new Message();
+                    message.obj = arr;
+                    photoHandler.sendMessage(message);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                dismissDialogHandler.sendEmptyMessage(0);
+                threads.remove(this);
+            }
+        }.start();
+    }
+
+    private void deletePhoto(final String time) {
+        new Thread() {
+            @Override
+            public void run() {
+                threads.add(this);
+                try {
+                    URL url = new URL("http://" + IP + ":" + PORT);
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+                    connection.setRequestMethod("DELETE");
+                    connection.setDoOutput(false);
+                    connection.setDoInput(true);
+                    connection.setUseCaches(false);
+                    connection.setDefaultUseCaches(false);
+                    connection.setRequestProperty("tab", "B");
+                    connection.setRequestProperty("time", time);
+
+                    InputStream inputStream = connection.getInputStream();
+                    byte[] arr = new byte[inputStream.available()];
+                    inputStream.read(arr);
+                    inputStream.close();
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
                 threads.remove(this);
             }
         }.start();
