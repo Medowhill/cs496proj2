@@ -12,12 +12,13 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.facebook.FacebookSdk;
-import com.group2.team.project2.event.AResultEvent;
+import com.facebook.login.LoginManager;
 import com.group2.team.project2.event.BResultEvent;
 import com.group2.team.project2.fragment.ATabFragment;
 import com.group2.team.project2.fragment.BTabFragment;
@@ -39,10 +40,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        // Initialize the SDK before executing any other operations,
-        FacebookSdk.sdkInitialize(getApplicationContext());
-
         setContentView(R.layout.activity_main);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -63,11 +60,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.i("cs496", requestCode + ", " + resultCode);
-        if (requestCode > 10)
-            EventBus.getInstance().post(AResultEvent.create(requestCode, resultCode, data));
-        else
-            EventBus.getInstance().post(BResultEvent.create(requestCode, resultCode, data));
+        EventBus.getInstance().post(BResultEvent.create(requestCode, resultCode, data));
     }
 
     @Override
@@ -81,6 +74,25 @@ public class MainActivity extends AppCompatActivity {
             }
             imageView.setVisibility(View.INVISIBLE);
         }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.activity_main, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menu_main_logout:
+                LoginManager.getInstance().logOut();
+                startActivity(new Intent(getApplicationContext(), LoginActivity.class));
+                finish();
+                break;
+        }
+        return true;
     }
 
     public void setImageView(Bitmap bitmap) {

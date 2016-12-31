@@ -9,35 +9,26 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     android:weightSum="1">
 
-    <com.facebook.login.widget.LoginButton
-        android:id="@+id/login_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="30dp"
-        android:layout_marginBottom="30dp" />
-
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
 
         <Button
-            android:text="POST"
-            android:id = "@+id/message_post"
+            android:id="@+id/message_post"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="60dp"
             android:layout_marginTop="50dp"
-            android:layout_marginLeft="60dp"/>
+            android:text="POST" />
 
         <Button
-            android:text= "GET"
-            android:id = "@+id/message_get"
+            android:id="@+id/message_get"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="50dp"
             android:layout_marginTop="50dp"
-            android:layout_marginLeft="50dp"/>
+            android:text="GET" />
 
     </LinearLayout>
 

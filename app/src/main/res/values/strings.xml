@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Project2</string>
-    <string name="action_settings">Settings</string>
-    <string name="section_format">Hello World from section: %1$d</string>
+    <string name="menu_main_logout">Logout</string>
     <string name="facebook_app_id">1819898281601617</string>
 </resources>

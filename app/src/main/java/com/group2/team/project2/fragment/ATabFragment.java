@@ -2,14 +2,13 @@ package com.group2.team.project2.fragment;
 
 import android.Manifest;
 import android.content.ContentResolver;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.provider.ContactsContract;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -19,59 +18,34 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facebook.AccessToken;
-import com.facebook.CallbackManager;
-import com.facebook.FacebookCallback;
-import com.facebook.FacebookException;
-import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
-import com.facebook.appevents.AppEventsLogger;
-import com.facebook.internal.Utility;
-import com.facebook.login.LoginResult;
-import com.facebook.login.widget.LoginButton;
 import com.group2.team.project2.EventBus;
 import com.group2.team.project2.R;
-import com.group2.team.project2.event.AResultEvent;
-import com.group2.team.project2.event.BResultEvent;
-import com.squareup.otto.Subscribe;
 
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.json.JSONException;
+import org.json.JSONObject;
 
-
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.ArrayList;
-import java.util.Arrays;
-
-import android.os.Handler;
-import android.widget.Toast;
-
-import static com.facebook.FacebookSdk.getApplicationContext;
-import static junit.framework.Assert.assertNotNull;
 
 public class ATabFragment extends Fragment {
 
-    private CallbackManager callbackManager;
     private EditText etMessage;
     private TextView tvRecvData;
-    private String url = "http://143.248.49.125:8000";
-    private String ownID = "10210835687305905";
+    private String url = "http://143.248.49.125:8000", ownID, ownEmail;
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
-    private String ownEmail = "ymk1211@hotmail.com";
 
     public ATabFragment() {
     }
@@ -88,76 +62,7 @@ public class ATabFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
-        // Facebook Login Button part
-        // 여기부터 facebook login button (Gradle, manifests, fragment_a.xml 참조)
-        callbackManager = CallbackManager.Factory.create();
-
         View rootView = inflater.inflate(R.layout.fragment_a, container, false);
-
-        LoginButton loginButton = (LoginButton) rootView.findViewById(R.id.login_button);
-        loginButton.setReadPermissions(Arrays.asList("public_profile", "email", "user_friends", "read_custom_friendlists"));
-        // If using in a fragment
-        loginButton.setFragment(this);
-        // Other app specific specialization
-
-        // Callback registration
-        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
-            @Override
-            public void onSuccess(LoginResult loginResult) {
-                GraphRequest graphRequest = GraphRequest.newMeRequest(loginResult.getAccessToken(), new GraphRequest.GraphJSONObjectCallback() {
-                    @Override
-                    public void onCompleted(JSONObject object, GraphResponse response) {
-                        Log.v("result", object.toString());
-                        try {
-                            ownID = object.getString("id");
-                            ownEmail = object.getString("email");
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-
-                Bundle parameters = new Bundle();
-                parameters.putString("fields", "id,name,email");
-                graphRequest.setParameters(parameters);
-                graphRequest.executeAsync();
-            }
-
-            @Override
-            public void onCancel() {
-                // Nothing Happens
-            }
-
-            @Override
-            public void onError(FacebookException exception) {
-                Log.e("LoginErr", exception.toString());
-            }
-        });
-        //여기까지 facebook login
-
-
-        // Get ID and Email
-        if (isLoggedIn()) {
-            AccessToken token = AccessToken.getCurrentAccessToken();
-            GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
-                @Override
-                public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
-                    try {
-                        ownID = jsonObject.getString("id");
-                        Log.d("LOGGED IN", ownID);
-                        ownEmail = jsonObject.getString("email");
-                        Log.d("my own ID", ownID);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            Bundle param = new Bundle();
-            param.putString("fields", "id, name, email");
-            graphRequest.setParameters(param);
-            graphRequest.executeAsync();
-        }
 
         //Get buttons
         Button postButton = (Button) rootView.findViewById(R.id.message_post);
@@ -194,11 +99,6 @@ public class ATabFragment extends Fragment {
     public void onDestroyView() {
         super.onDestroyView();
         EventBus.getInstance().unregister(this);
-    }
-
-    public boolean isLoggedIn() {
-        AccessToken accessToken = AccessToken.getCurrentAccessToken();
-        return accessToken != null;
     }
 
     // Contact 가져올 때 첫번째로 부르는 함수
@@ -402,7 +302,6 @@ public class ATabFragment extends Fragment {
         return facebookJSON;
     }
 
-
     private void SendToHttp(JSONArray contactArray) throws IOException, JSONException {
 
         JSONObject job = new JSONObject();
@@ -439,17 +338,5 @@ public class ATabFragment extends Fragment {
         byte[] arr = new byte[is.available()];
         is.read(arr);
         is.close();
-    }
-
-    @SuppressWarnings("unused")
-    @Subscribe
-    public void onActivityResultEvent(@NonNull AResultEvent event) {
-        onActivityResult(event.getRequestCode(), event.getResultCode(), event.getData());
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.i("cs496", requestCode + "," + resultCode);
-        callbackManager.onActivityResult(64206, resultCode, data);
     }
 }
