@@ -64,6 +64,7 @@ public class ATabFragment extends Fragment {
     private String url ="http://143.248.49.125:8000";
     private String ownID="";
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
+    private String ownEmail="";
 
     public ATabFragment() {
     }
@@ -95,7 +96,8 @@ public class ATabFragment extends Fragment {
                     public void onCompleted(JSONObject object, GraphResponse response) {
                         Log.v("result",object.toString());
                         try {
-                            ownID = object.getJSONObject("id").toString();
+                            ownID = object.getString("id");
+                            ownEmail = object.getString("email");
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -103,14 +105,14 @@ public class ATabFragment extends Fragment {
                 });
 
                 Bundle parameters = new Bundle();
-                parameters.putString("fields", "id,name,email,gender,birthday");
+                parameters.putString("fields", "id,name,email");
                 graphRequest.setParameters(parameters);
                 graphRequest.executeAsync();
             }
 
             @Override
             public void onCancel() {
-                // App code
+                // Nothing Happens
             }
 
             @Override
@@ -181,12 +183,14 @@ public class ATabFragment extends Fragment {
                     }
                 }.start();
 
+                /*
                 AccessToken token = AccessToken.getCurrentAccessToken();
                 GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
                     @Override
                     public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
                         try {
                             ownID = jsonObject.getString("id");
+                            ownEmail = jsonObject.getString("email");
                             Log.d("my own ID", ownID);
                         } catch (JSONException e) {
                             e.printStackTrace();
@@ -197,9 +201,10 @@ public class ATabFragment extends Fragment {
                 param.putString("fields", "id, name");
                 graphRequest.setParameters(param);
                 graphRequest.executeAsync();
+                */
 
 
-                param = new Bundle();
+                Bundle param = new Bundle();
                 param.putString("fields", "name,id");
                 new GraphRequest(
                         AccessToken.getCurrentAccessToken(),
@@ -343,6 +348,10 @@ public class ATabFragment extends Fragment {
         Log.d("Contact", json.toString());
     }
 
+    public boolean isLoggedIn() {
+        AccessToken accessToken = AccessToken.getCurrentAccessToken();
+        return accessToken != null;
+    }
 
     private String GetByHttp() throws IOException {
         URL u = new URL(url);
@@ -377,13 +386,14 @@ public class ATabFragment extends Fragment {
         } catch (JSONException e1) {
             e1.printStackTrace();
         }
+        Log.d("JSONSEND", job.toString());
 
         // URL클래스의 생성자로 주소를 넘겨준다.
         URL u = new URL(url);
         // 해당 주소의 페이지로 접속을 하고, 단일 HTTP 접속을 하기위해 캐스트한다.
         HttpURLConnection urlConnection = (HttpURLConnection) u.openConnection();
-        urlConnection.setConnectTimeout(3*1000);
-        urlConnection.setReadTimeout(3*1000);
+        //urlConnection.setConnectTimeout(3*1000);
+        //urlConnection.setReadTimeout(3*1000);
 
         // POST방식으로 요청한다.( 기본값은 GET )
         urlConnection.setRequestMethod("POST");
@@ -394,8 +404,8 @@ public class ATabFragment extends Fragment {
 
         // 요청 헤더를 정의한다.( 원래 Content-Length값을 넘겨주어야하는데 넘겨주지 않아도 되는것이 이상하다. )
         urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-        //urlConnection.setRequestProperty("Cache-Control", "no-cache");
-        //urlConnection.setRequestProperty("Accept", "application/json");
+        urlConnection.setRequestProperty("Tab", "A");
+        urlConnection.setRequestProperty("Email", ownEmail);
 
         // 새로운 OutputStream에 요청할 OutputStream을 넣는다
         OutputStream os = urlConnection.getOutputStream();
