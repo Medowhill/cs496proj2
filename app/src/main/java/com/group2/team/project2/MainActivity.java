@@ -1,8 +1,7 @@
 package com.group2.team.project2;
 
+import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -10,20 +9,13 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
+import android.util.Log;
 
-
-import com.facebook.CallbackManager;
-import com.facebook.login.LoginResult;
-import com.facebook.login.widget.LoginButton;
+import com.facebook.FacebookSdk;
+import com.group2.team.project2.event.BResultEvent;
 import com.group2.team.project2.fragment.ATabFragment;
 import com.group2.team.project2.fragment.BTabFragment;
 import com.group2.team.project2.fragment.CTabFragment;
-
-import com.facebook.FacebookSdk;
-import com.facebook.appevents.AppEventsLogger;
-
-import static com.facebook.FacebookSdk.getApplicationContext;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -51,6 +43,12 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.i("cs496", requestCode + ", " + resultCode);
+        EventBus.getInstance().post(BResultEvent.create(requestCode, resultCode, data));
     }
 
     public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
