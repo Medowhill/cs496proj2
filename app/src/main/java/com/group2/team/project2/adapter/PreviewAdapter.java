@@ -14,7 +14,7 @@ import com.group2.team.project2.object.PhotoPreview;
 
 import java.util.ArrayList;
 
-/**
+/*
  * Created by q on 2016-12-31.
  */
 

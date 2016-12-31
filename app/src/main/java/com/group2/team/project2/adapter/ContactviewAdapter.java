@@ -73,13 +73,14 @@ public class ContactviewAdapter extends BaseAdapter implements ListAdapter {
             String tt = null;
             String bt = null;
             try {
-                tt = json_data.getString("Name");
-                bt = json_data.getString("Mobile number");
+                tt = json_data.getString("name");
+                topText.setText(tt);
+                if (json_data.has("mobile_number"))
+                    bt = json_data.getString("mobile_number");
+                bottomText.setText(bt);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            topText.setText(tt);
-            bottomText.setText(bt);
         }
 
         return convertView;
