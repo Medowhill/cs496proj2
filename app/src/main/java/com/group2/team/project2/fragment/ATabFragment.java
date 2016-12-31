@@ -209,8 +209,6 @@ public class ATabFragment extends Fragment {
                 graphRequest.executeAsync();
 
 
-                tvRecvData.setText(ownID);
-
                 /* make the API call */
                 param = new Bundle();
                 param.putString("fields", "name,id");
@@ -225,12 +223,33 @@ public class ATabFragment extends Fragment {
                             }
                         }
                 );
-                friend.setParameters(param);
                 friend.executeAsync();
+
+                /* make the API call */
+                param = new Bundle();
+                param.putString("fields", "name,id");
+                new GraphRequest(
+                        AccessToken.getCurrentAccessToken(),
+                        "/10210835687305905/taggable_friends",
+                        param,
+                        HttpMethod.GET,
+                        new GraphRequest.Callback() {
+                            public void onCompleted(GraphResponse response) {
+                                Log.d("Members4", response.toString());
+                                GraphRequest nextRequest = response.getRequestForPagedResults(GraphResponse.PagingDirection.NEXT);
+                                if (nextRequest != null) {
+                                    Bundle parameters = new Bundle();
+                                    nextRequest.setParameters(parameters);
+                                    nextRequest.setCallback(this);
+                                    nextRequest.executeAsync();
+                                }
+                            }
+                        }
+                ).executeAsync();
+
 
                 new Thread(){
                     public void run(){
-                        /* make the API call */
                         Bundle param = new Bundle();
                         param.putString("fields", "name,id");
                         GraphRequest friend = new GraphRequest(
@@ -240,20 +259,31 @@ public class ATabFragment extends Fragment {
                                 HttpMethod.GET,
                                 new GraphRequest.Callback() {
                                     public void onCompleted(GraphResponse response) {
-                                        Log.d("Members", response.toString());
+                                        Log.d("Members2", response.toString());
+
                                     }
                                 }
                         );
-                        friend.setParameters(param);
 
+                        GraphResponse response = friend.executeAndWait();
+                        GraphRequest nextRequest = response.getRequestForPagedResults(GraphResponse.PagingDirection.NEXT);
+                        if (nextRequest!= null){
+                            nextRequest.setCallback(friend.getCallback());
+                            nextRequest.executeAndWait();
+                        }
+
+                        /*
                         GraphResponse response = friend.executeAndWait();
                         GraphRequest nextRequest = response.getRequestForPagedResults(GraphResponse.PagingDirection.NEXT);
                         assertNotNull(response.getJSONObject());
                         Log.d("helloMonkey", response.toString());
                         nextRequest.setCallback(friend.getCallback());
                         response = nextRequest.executeAndWait();
+                        */
                     }
                 }.start();
+
+
 
 
             }
