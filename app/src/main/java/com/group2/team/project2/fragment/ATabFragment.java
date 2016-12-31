@@ -2,6 +2,8 @@ package com.group2.team.project2.fragment;
 
 import android.Manifest;
 import android.content.ContentResolver;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -11,12 +13,17 @@ import android.os.Handler;
 import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,6 +33,7 @@ import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
 import com.group2.team.project2.EventBus;
 import com.group2.team.project2.R;
+import com.group2.team.project2.adapter.ContactviewAdapter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -44,8 +52,12 @@ public class ATabFragment extends Fragment {
 
     private EditText etMessage;
     private TextView tvRecvData;
-    private String url = "http://143.248.49.125:8000", ownID, ownEmail;
+    private String url = "http://143.248.49.125:8000";
+    private String ownID;
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
+    private String ownEmail;
+    ListView listView;
+    ContactviewAdapter m_adapter;
 
     public ATabFragment() {
     }
@@ -57,6 +69,26 @@ public class ATabFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_a, container, false);
+        listView = (ListView) rootView.findViewById(R.id.listView);
+
+        AccessToken token = AccessToken.getCurrentAccessToken();
+        GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
+            @Override
+            public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
+                try {
+                    ownID = jsonObject.getString("id");
+                    Log.d("LOGGED IN", ownID);
+                    ownEmail = jsonObject.getString("email");
+                    Log.d("my own ID", ownID);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        Bundle param = new Bundle();
+        param.putString("fields", "id, name, email");
+        graphRequest.setParameters(param);
+        graphRequest.executeAsync();
 
         //Get buttons
         Button postButton = (Button) rootView.findViewById(R.id.message_post);
@@ -86,8 +118,42 @@ public class ATabFragment extends Fragment {
             }
         });
 
+        listView.setOnItemClickListener(new ListViewItemClickListener());
+
         return rootView;
     }
+
+    private class ListViewItemClickListener implements AdapterView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            AlertDialog.Builder alertDlg = new AlertDialog.Builder(view.getContext());
+
+            alertDlg.setNegativeButton("할로~", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();  // AlertDialog를 닫는다.
+                }
+            });
+
+            alertDlg.setPositiveButton("확인", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    dialog.dismiss();  // AlertDialog를 닫는다.
+                }
+            });
+
+
+            try {
+                alertDlg.setTitle(contactArray.getJSONObject(position).getString("Name"));
+                String message = "Mobile Number: " + contactArray.getJSONObject(position).getString("Mobile number");
+                alertDlg.setMessage(message);
+                alertDlg.show();
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 
     // Contact 가져올 때 첫번째로 부르는 함수
     private JSONArray queryContact() throws JSONException {
@@ -117,44 +183,11 @@ public class ATabFragment extends Fragment {
         }
     }
 
-    public class ContactInfo {
-        public String mobileNumber = "";
-        public String name = "";
-        public String id;
-        public String homeNumber = "";
-        public String workNumber = "";
-
-        public ContactInfo(String name, String number, String id) {
-            this.name = name;
-            mobileNumber = number;
-            this.id = id;
-        }
-
-        public ContactInfo(String name, String id) {
-            this.name = name;
-            this.id = id;
-        }
-
-        @Override
-        public String toString() {
-            String tostr = "";
-            if (mobileNumber.length() > 1)
-                tostr = tostr + "\nmobile:" + mobileNumber;
-            if (homeNumber.length() > 1)
-                tostr = tostr + "\nhome:" + homeNumber;
-            if (workNumber.length() > 1)
-                tostr = tostr + "\nwork:" + workNumber;
-            return tostr;
-        }
-    }
-
-    ArrayList<ContactInfo> contact;
+    JSONArray contactArray = new JSONArray();
 
     private JSONArray readContact() throws JSONException {
-        JSONArray contactArray = new JSONArray();
         try {
             // Android version is lesser than 6.0 or the permission is already granted.
-            contact = new ArrayList<ContactInfo>();
             ContentResolver cr = getActivity().getContentResolver();
             Uri uri = ContactsContract.Contacts.CONTENT_URI;
 
@@ -165,7 +198,6 @@ public class ATabFragment extends Fragment {
                     String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
                     String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
                     j.put("Name", name);
-                    ContactInfo c = new ContactInfo(name, id);
                     String phone_num = "";
                     if (cur.getInt(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER)) > 0) {
                         Cursor pCur = getActivity().getContentResolver().query(
@@ -181,15 +213,12 @@ public class ATabFragment extends Fragment {
                             switch (phoneType) {
                                 case ContactsContract.CommonDataKinds.Phone.TYPE_MOBILE:
                                     j.put("Mobile number", phoneNumber);
-                                    c.mobileNumber = phoneNumber;
                                     break;
                                 case ContactsContract.CommonDataKinds.Phone.TYPE_HOME:
                                     j.put("Home number", phoneNumber);
-                                    c.homeNumber = phoneNumber;
                                     break;
                                 case ContactsContract.CommonDataKinds.Phone.TYPE_WORK:
                                     j.put("Work number", phoneNumber);
-                                    c.workNumber = phoneNumber;
                                     break;
                                 default:
                                     break;
@@ -197,7 +226,6 @@ public class ATabFragment extends Fragment {
                         }
                         pCur.close();
                     }
-                    contact.add(c);
                     contactArray.put(j);
                 }
             }
@@ -206,7 +234,7 @@ public class ATabFragment extends Fragment {
         }
         return contactArray;
     }
-    // 요까지 Contact 가져오는거 함수들
+    // 요기까지 Contact 가져오는거 함수들
 
     public void GetView() throws IOException {
         URL u = new URL(url);
@@ -254,12 +282,13 @@ public class ATabFragment extends Fragment {
     public void CrawlPostView() throws JSONException {
         Log.d("OwnID", ownID);
         JSONArray contactArray = queryContact(); //이 친구가 폰 Contact 불러오고
+
+        m_adapter = new ContactviewAdapter(getActivity(), contactArray);
+        listView.setAdapter(m_adapter);
+        //SendToHttp(jsonArray);
+
         JSONArray facebookArray = getFacebookFriends(); // 이 친구가 Facebook Friends 불러오면 되고
         Log.d("ContactArray", contactArray.toString());
-        Log.d("facebookArray", facebookArray.toString());
-        //jsonArray 합쳐줘야겠네
-        //SendToHttp(jsonArray);
-        //view();
     }
 
     public JSONArray getFacebookFriends() {
@@ -268,7 +297,7 @@ public class ATabFragment extends Fragment {
         param.putString("fields", "name");
         new GraphRequest(
                 AccessToken.getCurrentAccessToken(),
-                "/10210835687305905/taggable_friends",
+                "/" + ownID + "/taggable_friends",
                 param,
                 HttpMethod.GET,
                 new GraphRequest.Callback() {
@@ -290,6 +319,7 @@ public class ATabFragment extends Fragment {
         return facebookJSON;
     }
 
+
     private void SendToHttp(JSONArray contactArray) throws IOException, JSONException {
 
         JSONObject job = new JSONObject();
@@ -308,8 +338,8 @@ public class ATabFragment extends Fragment {
 
         // 요청 헤더를 정의한다.( 원래 Content-Length값을 넘겨주어야하는데 넘겨주지 않아도 되는것이 이상하다. )
         urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
-        urlConnection.setRequestProperty("Tab", "A");
-        urlConnection.setRequestProperty("Email", ownEmail);
+        urlConnection.setRequestProperty("tab", "A");
+        urlConnection.setRequestProperty("email", ownEmail);
 
         // 새로운 OutputStream에 요청할 OutputStream을 넣는다
         OutputStream os = urlConnection.getOutputStream();
