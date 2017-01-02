@@ -34,27 +34,25 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
 import java.net.URL;
 
 public class ATabFragment extends Fragment {
 
     private EditText etMessage;
     private TextView tvRecvData;
-    private String url = "http://143.248.49.125:8000";
+    private String url = "http://52.78.240.193:3000";
+    //52.78.240.193
     private String ownID;
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
     private String ownEmail;
     ListView listView;
     ContactviewAdapter m_adapter;
+    JSONArray contactArray = new JSONArray();
 
     public ATabFragment() {
     }
@@ -90,7 +88,15 @@ public class ATabFragment extends Fragment {
         //Get buttons
         Button postButton = (Button) rootView.findViewById(R.id.message_post);
         Button getButton = (Button) rootView.findViewById(R.id.message_get);
-        final Handler handler = new Handler();
+        Button clearButton = (Button) rootView.findViewById(R.id.clear);
+
+        clearButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                m_adapter = new ContactviewAdapter(getActivity(), null);
+                listView.setAdapter(m_adapter);
+            }
+        });
 
         postButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -139,7 +145,6 @@ public class ATabFragment extends Fragment {
                 }
             });
 
-
             try {
                 alertDlg.setTitle(contactArray.getJSONObject(position).getString("name"));
                 String message = "";
@@ -165,23 +170,23 @@ public class ATabFragment extends Fragment {
 
     // Contact 가져올 때 첫번째로 부르는 함수
     private JSONArray queryContact() throws JSONException {
-        JSONArray contactArray = new JSONArray();
+        JSONArray phoneArray = new JSONArray();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getActivity().checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
             //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
         } else {
-            contactArray = readContact();
+            phoneArray = readContact();
         }
-        return contactArray;
+        return phoneArray;
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        JSONArray contactArray = new JSONArray();
+        JSONArray phoneArray = new JSONArray();
         if (requestCode == PERMISSIONS_REQUEST_READ_CONTACTS) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 try {
-                    contactArray = readContact();
+                    phoneArray = readContact();
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -191,9 +196,8 @@ public class ATabFragment extends Fragment {
         }
     }
 
-    JSONArray contactArray = new JSONArray();
-
     private JSONArray readContact() throws JSONException {
+        JSONArray phoneArray = new JSONArray();
         try {
             // Android version is lesser than 6.0 or the permission is already granted.
             ContentResolver cr = getActivity().getContentResolver();
@@ -234,71 +238,82 @@ public class ATabFragment extends Fragment {
                         }
                         pCur.close();
                     }
-                    contactArray.put(j);
+                    phoneArray.put(j);
                 }
             }
         } catch (JSONException e) {
             throw new JSONException(e.getMessage());
         }
-        return contactArray;
+        return phoneArray;
     }
     // 요기까지 Contact 가져오는거 함수들
 
     public void GetView() throws IOException {
-        URL u = new URL(url);
-        HttpURLConnection urlConnection = (HttpURLConnection) u.openConnection();
-        urlConnection.setConnectTimeout(3 * 1000);
-        urlConnection.setReadTimeout(3 * 1000);
+        final Handler handler = new Handler();
+        new Thread() {
+            public void run() {
+                try {
+                    URL u = new URL(url);
+                    HttpURLConnection urlConnection = (HttpURLConnection) u.openConnection();
+                    //urlConnection.setConnectTimeout(3 * 1000);
+                    //urlConnection.setReadTimeout(3 * 1000);
 
-        urlConnection.setRequestMethod("GET");
-        urlConnection.setDoInput(true);
+                    urlConnection.setDoOutput(false);
+                    urlConnection.setDoInput(true);
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.setRequestProperty("tab", "A");
+                    urlConnection.setRequestProperty("email", ownEmail);
 
-        String response = "";
-        String line;
-        BufferedReader br = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-        while ((line = br.readLine()) != null) {
-            response += line;
-        }
+                    String response = "";
+                    String line;
+                    Log.d("hello", "sofar");
+                    InputStream is = urlConnection.getInputStream();
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
 
-        /* 쓰일 것 같음
-        new Thread(){
-                    public void run(){
-                        try {
-                            String result = GetByHttp(); // 메시지를 받아옴
-                            handler.post(new Runnable() {
-                                public void run() {
-                                    try {
-                                        tvRecvData.setText(obj.get("message").toString());
-                                    } catch (JSONException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            });
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                    byte[] buf = new byte[1024 * 8];
+                    int length;
+                    while ((length = is.read(buf)) != -1) {
+                        out.write(buf, 0, length);
                     }
-                }.start();
-         */
+                    byte[] arr = out.toByteArray();
+                    is.close();
 
-        // String으로 받아서, JSON Array로 바꾸고, View 해줘야함
+                    JSONObject array = new JSONObject(new String(arr));
+                    Log.d("ARRAY", array.toString());
+                    contactArray = array.getJSONArray("contact");
+                    Log.d("FINARRAY", contactArray.toString());
+
+                    handler.post(new Runnable() {
+                        public void run() {
+                            m_adapter = new ContactviewAdapter(getActivity(), contactArray);
+                            listView.setAdapter(m_adapter);
+                        }
+                    });
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
     }
 
     public void CrawlPostView() throws JSONException, IOException {
+
         Log.d("OwnID", ownID);
-        JSONArray contactArray = queryContact(); //이 친구가 폰 Contact 불러오고
+        contactArray = queryContact(); //이 친구가 폰 Contact 불러오고
 
         m_adapter = new ContactviewAdapter(getActivity(), contactArray);
         listView.setAdapter(m_adapter);
-        SendToHttp(contactArray);
+        JSONArray mkArray = contactArray;
+        SendToHttp(mkArray);
 
         getFacebookFriends(); // 이 친구가 Facebook Friends 불러오면 되고
         //Log.d("ContactArray", contactArray.toString());
     }
 
     public void getFacebookFriends() {
+        final JSONArray facebookArray = new JSONArray();
         Bundle param = new Bundle();
         param.putString("fields", "name");
         new GraphRequest(
@@ -311,16 +326,14 @@ public class ATabFragment extends Fragment {
                         JSONObject obj = response.getJSONObject();
                         try {
                             JSONArray arr = obj.getJSONArray("data");
-                            //m_adapter = new ContactviewAdapter(getActivity(), arr);
-                            //m_adapter.notifyDataSetChanged();
-//                            listView
-                            for(int i = 0; i < arr.length(); i++) {
+                            for (int i = 0; i < arr.length(); i++) {
                                 arr.getJSONObject(i).remove("id");
                                 contactArray.put(arr.getJSONObject(i));
+                                facebookArray.put(arr.getJSONObject(i));
                             }
+                            //Log.d("facebookArray", arr.toString());
                             m_adapter.notifyDataSetChanged();
-                            SendToHttp(arr);
-                        } catch (JSONException | IOException e) {
+                        } catch (JSONException e) {
                             e.printStackTrace();
                         }
                         GraphRequest nextRequest = response.getRequestForPagedResults(GraphResponse.PagingDirection.NEXT);
@@ -329,6 +342,16 @@ public class ATabFragment extends Fragment {
                             nextRequest.setParameters(parameters);
                             nextRequest.setCallback(this);
                             nextRequest.executeAsync();
+                        } else {
+                            //Log.d("facebookArrayLength", String.valueOf(facebookArray.length()));
+                            //Log.d("facebookArray", facebookArray.toString());
+                            try {
+                                SendToHttp(facebookArray);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }
@@ -338,7 +361,7 @@ public class ATabFragment extends Fragment {
 
     private void SendToHttp(final JSONArray JsonArr) throws IOException, JSONException {
         new Thread() {
-            public void run(){
+            public void run() {
                 try {
                     // URL클래스의 생성자로 주소를 넘겨준다.
                     URL u = new URL(url);
@@ -353,7 +376,7 @@ public class ATabFragment extends Fragment {
                     urlConnection.setDoOutput(true);
 
                     // 요청 헤더를 정의한다.( 원래 Content-Length값을 넘겨주어야하는데 넘겨주지 않아도 되는것이 이상하다. )
-                    urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                    //urlConnection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
                     urlConnection.setRequestProperty("tab", "A");
                     urlConnection.setRequestProperty("email", ownEmail);
 
@@ -369,8 +392,8 @@ public class ATabFragment extends Fragment {
 
                     // 밑에 있는 코드는, setDoInput 지우고, 지워보고 없어도 상관없으면 지우자.
                     InputStream is = urlConnection.getInputStream();
-                    byte[] arr = new byte[is.available()];
-                    is.read(arr);
+                    //byte[] arr = new byte[is.available()];
+                    //is.read(arr);
                     is.close();
                 } catch (IOException e) {
                     e.printStackTrace();
