@@ -286,7 +286,6 @@ public class ATabFragment extends Fragment {
         // String으로 받아서, JSON Array로 바꾸고, View 해줘야함
     }
 
-
     public void CrawlPostView() throws JSONException, IOException {
         Log.d("OwnID", ownID);
         JSONArray contactArray = queryContact(); //이 친구가 폰 Contact 불러오고
