@@ -12,7 +12,7 @@ import android.support.v4.app.NotificationCompat;
 import com.group2.team.project2.MainActivity;
 import com.group2.team.project2.R;
 import com.group2.team.project2.fragment.CTabFragment;
-import com.group2.team.project2.object.DutchPay;
+import com.group2.team.project2.object.PayDebt;
 
 public class PushBroadcastReceiver extends BroadcastReceiver {
 
@@ -42,7 +42,7 @@ public class PushBroadcastReceiver extends BroadcastReceiver {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(notification, notificationBuilder.build());
 
-        DutchPay pay = new DutchPay(email, name, account, amount, time, isNew);
+        PayDebt pay = new PayDebt(email, name, account, amount, time, isNew);
         pay.setNotification(notification++);
         CTabFragment.addPay(pay);
 

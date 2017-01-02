@@ -33,7 +33,7 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.group2.team.project2.R;
-import com.group2.team.project2.object.DutchPay;
+import com.group2.team.project2.object.PayDebt;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -53,7 +53,7 @@ public class CTabFragment extends Fragment {
     private AutoCompleteTextView autoComplete;
     private LinearLayout layout;
 
-    private static ArrayList<DutchPay> newPays = new ArrayList<>();
+    private static ArrayList<PayDebt> newPays = new ArrayList<>();
     private ArrayList<Thread> threads = new ArrayList<>();
     private ArrayList<String> sendEmails = new ArrayList<>();
     private String mEmail;
@@ -65,7 +65,7 @@ public class CTabFragment extends Fragment {
             String email = intent.getStringExtra("email"), name = intent.getStringExtra("name"), time = intent.getStringExtra("time"),
                     amount = intent.getStringExtra("amount"), account = intent.getStringExtra("account");
             boolean isNew = intent.getBooleanExtra("isNew", true);
-            solveNewPay(new DutchPay(email, name, account, amount, time, isNew));
+            solveNewPay(new PayDebt(email, name, account, amount, time, isNew));
             abortBroadcast();
         }
     };
@@ -401,11 +401,11 @@ public class CTabFragment extends Fragment {
         }.start();
     }
 
-    public static void addPay(DutchPay pay) {
+    public static void addPay(PayDebt pay) {
         newPays.add(pay);
     }
 
-    private void solveNewPay(DutchPay pay) {
+    private void solveNewPay(PayDebt pay) {
         newPays.remove(pay);
     }
 }

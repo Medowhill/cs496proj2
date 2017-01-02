@@ -1,12 +1,12 @@
 package com.group2.team.project2.object;
 
-public class DutchPay {
+public class PayDebt {
 
     private String email, name, account, amount, time;
     private boolean isNew;
     private int notification;
 
-    public DutchPay(String email, String name, String account, String amount, String time, boolean isNew) {
+    public PayDebt(String email, String name, String account, String amount, String time, boolean isNew) {
         this.email = email;
         this.name = name;
         this.account = account;
