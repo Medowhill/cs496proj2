@@ -33,7 +33,7 @@ public class PushBroadcastReceiver extends BroadcastReceiver {
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle(isNew ? context.getString(R.string.c_notification_new) : context.getString(R.string.c_notification_old))
-                .setContentText(name + " (" + email + ") 님이 " + amount + " 원을 " + account + " 계좌로 " +
+                .setContentText(name + " 님이 " + amount + " 원을 " + account + " 계좌로 " +
                         (isNew ? context.getString(R.string.c_notification_text_new) : context.getString(R.string.c_notification_text_old)))
                 .setAutoCancel(true)
                 .setSound(defaultSoundUri)

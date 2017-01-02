@@ -39,6 +39,7 @@ import com.group2.team.project2.R;
 import com.group2.team.project2.adapter.payViewAdapter;
 import com.group2.team.project2.adapter.receiveViewAdapter;
 import com.group2.team.project2.object.PayDebt;
+import com.group2.team.project2.object.ReceiveDebt;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -47,23 +48,30 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import static com.group2.team.project2.R.layout.dialog_receive;
 
 public class CTabFragment extends Fragment {
 
     private FloatingActionButton fab;
+
+    private EditText editTextPerson, editTextTotal;
     private AutoCompleteTextView autoComplete;
     private LinearLayout layout;
 
     private static ArrayList<PayDebt> newPays = new ArrayList<>();
+    private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
     private ArrayList<Thread> threads = new ArrayList<>();
-    private ArrayList<String> sendEmails = new ArrayList<>();
-    private String mEmail;
+    private ArrayList<ReceiveDebt> receiveDebts = new ArrayList<>();
+    private ArrayList<String> sendEmails = new ArrayList<>(), mEmails = new ArrayList<>(), mNames = new ArrayList<>();
+    private String mEmail, mName;
     private IntentFilter filter;
     private ListView payView;
     private ListView receiveView;
@@ -84,16 +92,21 @@ public class CTabFragment extends Fragment {
     private Handler autoCompleteHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
+            Log.i("cs496test", (String) msg.obj);
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line);
             try {
-                Log.i("cs496test", (String) msg.obj);
                 JSONArray array = new JSONArray((String) msg.obj);
-                ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_dropdown_item_1line);
-                for (int i = 0; i < array.length(); i++)
-                    adapter.add(array.getJSONObject(i).getString("email"));
-                autoComplete.setAdapter(adapter);
+                for (int i = 0; i < array.length(); i++) {
+                    String email = array.getJSONObject(i).getString("email"), name = array.getJSONObject(i).getString("name");
+                    adapter.add(email);
+                    adapter.add(name);
+                    mEmails.add(email);
+                    mNames.add(name);
+                }
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+            autoComplete.setAdapter(adapter);
         }
     };
 
@@ -101,7 +114,7 @@ public class CTabFragment extends Fragment {
         @Override
         public void handleMessage(Message msg) {
             if (msg.arg1 == 't') {
-                final String email = (String) msg.obj;
+                final String email = (String) msg.obj, total = editTextTotal.getText().toString(), person = editTextPerson.getText().toString();
                 sendEmails.add(email);
 
                 final TextView textView = new TextView(getContext());
@@ -116,10 +129,24 @@ public class CTabFragment extends Fragment {
                     public void onClick(View v) {
                         layout.removeView(textView);
                         sendEmails.remove(email);
+
+                        if (!sendEmails.isEmpty()) {
+                            if (total.length() == 0) {
+                                if (person.length() != 0)
+                                    editTextTotal.setText(Integer.parseInt(person) * sendEmails.size() + "");
+                            } else
+                                editTextPerson.setText(Integer.parseInt(total) / sendEmails.size() + "");
+                        }
                     }
                 });
                 layout.addView(textView);
                 autoComplete.setText("");
+
+                if (total.length() == 0) {
+                    if (person.length() != 0)
+                        editTextTotal.setText(Integer.parseInt(person) * sendEmails.size() + "");
+                } else
+                    editTextPerson.setText(Integer.parseInt(total) / sendEmails.size() + "");
             } else {
                 Toast.makeText(getContext(), R.string.c_add_toast_unavailable, Toast.LENGTH_SHORT).show();
             }
@@ -142,6 +169,7 @@ public class CTabFragment extends Fragment {
             @Override
             public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
                 try {
+                    mName = jsonObject.getString("name");
                     mEmail = jsonObject.getString("email");
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -150,7 +178,7 @@ public class CTabFragment extends Fragment {
             }
         });
         Bundle param = new Bundle();
-        param.putString("fields", "email");
+        param.putString("fields", "email,name");
         graphRequest.setParameters(param);
         graphRequest.executeAsync();
 
@@ -194,10 +222,10 @@ public class CTabFragment extends Fragment {
                 final View view = inflater.inflate(R.layout.dialog_c_add, null);
                 layout = (LinearLayout) view.findViewById(R.id.c_add_linearLayout);
                 autoComplete = (AutoCompleteTextView) view.findViewById(R.id.c_add_autoComplete);
+                editTextTotal = (EditText) view.findViewById(R.id.c_add_editText_total);
+                editTextPerson = (EditText) view.findViewById(R.id.c_add_editText_person);
                 final Button button = (Button) view.findViewById(R.id.c_add_button);
-                final EditText editTextTotal = (EditText) view.findViewById(R.id.c_add_editText_total),
-                        editTextPerson = (EditText) view.findViewById(R.id.c_add_editText_person),
-                        editTextAccount = (EditText) view.findViewById(R.id.c_add_editText_account);
+                final EditText editTextAccount = (EditText) view.findViewById(R.id.c_add_editText_account);
                 final Spinner spinner = (Spinner) view.findViewById(R.id.c_add_spinner);
                 setAutoCompleteList();
 
@@ -205,10 +233,15 @@ public class CTabFragment extends Fragment {
                     @Override
                     public void onClick(View v) {
                         String newEmail = autoComplete.getText().toString();
+                        int index = mNames.indexOf(newEmail);
+                        if (index != -1)
+                            newEmail = mEmails.get(index);
                         if (newEmail.equals(mEmail)) {
                             Toast.makeText(getContext(), R.string.c_add_toast_your, Toast.LENGTH_SHORT).show();
+                            autoComplete.setText("");
                         } else if (sendEmails.contains(newEmail)) {
                             Toast.makeText(getContext(), R.string.c_add_toast_already, Toast.LENGTH_SHORT).show();
+                            autoComplete.setText("");
                         } else {
                             checkEmail(newEmail);
                         }
@@ -237,7 +270,6 @@ public class CTabFragment extends Fragment {
                         else
                             y = Integer.parseInt(total);
                         int d = y - n * x;
-                        Log.i("cs496test", d + "");
                         if (n > 0 && (d >= n || d < 0))
                             editTextTotal.setText(x * n + "");
                     }
@@ -269,16 +301,39 @@ public class CTabFragment extends Fragment {
                             editTextPerson.setText(x / n + "");
                     }
                 });
-                new AlertDialog.Builder(getActivity())
+                final AlertDialog alertDialog = new AlertDialog.Builder(getActivity())
                         .setView(view)
-                        .setPositiveButton(R.string.c_add_positive, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-
-                            }
-                        })
+                        .setPositiveButton(R.string.c_add_positive, null)
                         .setNegativeButton(R.string.c_add_negative, null)
-                        .show();
+                        .create();
+                alertDialog.setOnShowListener(new DialogInterface.OnShowListener() {
+                    @Override
+                    public void onShow(final DialogInterface dialog) {
+                        Button buttonPositive = alertDialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                        buttonPositive.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                if (sendEmails.isEmpty())
+                                    Toast.makeText(getContext(), R.string.c_add_toast_noperson, Toast.LENGTH_SHORT).show();
+                                else if (editTextPerson.getText().length() == 0)
+                                    Toast.makeText(getContext(), R.string.c_add_toast_noamount, Toast.LENGTH_SHORT).show();
+                                else if (editTextAccount.getText().length() == 0)
+                                    Toast.makeText(getContext(), R.string.c_add_toast_noaccount, Toast.LENGTH_SHORT).show();
+                                else {
+                                    ArrayList<String> emails = new ArrayList<>(), names = new ArrayList<>();
+                                    emails.addAll(sendEmails);
+                                    for (String email : emails)
+                                        names.add(mNames.get(mEmails.indexOf(email)));
+                                    addDebt(new ReceiveDebt(mName, getResources().getStringArray(R.array.c_add_banks)[spinner.getSelectedItemPosition()]
+                                            + " " + editTextAccount.getText().toString(), editTextPerson.getText().toString(),
+                                            format.format(Calendar.getInstance().getTime()), emails, names));
+                                    alertDialog.dismiss();
+                                }
+                            }
+                        });
+                    }
+                });
+                alertDialog.show();
             }
         });
         return rootView;
@@ -364,6 +419,11 @@ public class CTabFragment extends Fragment {
                     connection.setRequestProperty("type", "token");
                     connection.setRequestProperty("token", token);
                     connection.setRequestProperty("email", mEmail);
+
+                    OutputStream outputStream = connection.getOutputStream();
+                    outputStream.write(mName.getBytes("UTF-8"));
+                    outputStream.flush();
+                    outputStream.close();
 
                     InputStream inputStream = connection.getInputStream();
                     byte[] arr = new byte[inputStream.available()];
@@ -456,6 +516,65 @@ public class CTabFragment extends Fragment {
                     message.arg1 = new String(arr).charAt(0);
                     message.obj = email;
                     checkHandler.sendMessage(message);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                threads.remove(this);
+            }
+        }.start();
+    }
+
+    private void addDebt(ReceiveDebt debt) {
+        receiveDebts.add(debt);
+        final JSONObject object = new JSONObject();
+        try {
+            object.put("account", debt.getAccount());
+            object.put("amount", debt.getAmount());
+            object.put("time", debt.getTime());
+            object.put("name", debt.getName());
+
+            JSONArray array = new JSONArray();
+            for (int i = 0; i < debt.getEmails().size(); i++) {
+                JSONObject o = new JSONObject();
+                o.put("email", debt.getEmails().get(i));
+                o.put("name", debt.getNames().get(i));
+                o.put("payed", false);
+                array.put(o);
+            }
+            object.put("people", array);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        new Thread() {
+            @Override
+            public void run() {
+                threads.add(this);
+                try {
+                    //URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
+                    URL url = new URL("http://143.248.49.156:3000");
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+                    connection.setRequestMethod("POST");
+                    connection.setDoOutput(true);
+                    connection.setDoInput(true);
+                    connection.setUseCaches(false);
+                    connection.setDefaultUseCaches(false);
+                    connection.setRequestProperty("tab", "C");
+                    connection.setRequestProperty("type", "debt");
+                    connection.setRequestProperty("email", mEmail);
+
+                    OutputStream outputStream = connection.getOutputStream();
+                    outputStream.write(object.toString().getBytes("UTF-8"));
+                    outputStream.flush();
+                    outputStream.close();
+
+                    InputStream inputStream = connection.getInputStream();
+                    byte[] arr = new byte[inputStream.available()];
+                    inputStream.read(arr);
+                    inputStream.close();
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 } catch (IOException e) {

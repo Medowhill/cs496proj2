@@ -1,6 +1,7 @@
 package com.group2.team.project2.service;
 
 import android.content.Intent;
+import android.util.Log;
 
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
@@ -13,6 +14,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
 
+        Log.i("cs496test", remoteMessage.getData().toString());
         if (remoteMessage.getData().size() > 0) {
             Map<String, String> data = remoteMessage.getData();
             String email = data.get("email"), name = data.get("name"), account = data.get("account"), amount = data.get("amount"), time = data.get("time");
