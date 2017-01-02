@@ -1,6 +1,9 @@
 package com.group2.team.project2;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
@@ -21,13 +24,13 @@ import android.widget.ImageView;
 import com.facebook.login.LoginManager;
 import com.group2.team.project2.event.BResultEvent;
 import com.group2.team.project2.fragment.CTabFragment;
+import com.group2.team.project2.object.DutchPay;
 
 import uk.co.senab.photoview.PhotoViewAttacher;
 
 public class MainActivity extends AppCompatActivity {
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
-
 
     private ViewPager mViewPager;
     private ImageView imageView;

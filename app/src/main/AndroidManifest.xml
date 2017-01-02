@@ -38,6 +38,18 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme.NoActionBar"></activity>
 
+        <service android:name=".service.MyFirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <receiver android:name=".receiver.PushBroadcastReceiver">
+            <intent-filter>
+                <action android:name="com.group2.team.proj2.broadcast_push" />
+            </intent-filter>
+        </receiver>
+
         <meta-data
             android:name="com.facebook.sdk.ApplicationId"
             android:value="@string/facebook_app_id" />
