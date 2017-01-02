@@ -8,60 +8,63 @@
         android:id="@+id/receive_cardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/b_preview_outer_vertical_margin"
-        android:layout_marginLeft="@dimen/b_preview_outer_horizontal_margin"
-        android:layout_marginRight="@dimen/b_preview_outer_horizontal_margin"
-        android:layout_marginTop="@dimen/b_preview_outer_vertical_margin"
+        android:layout_marginBottom="@dimen/c_debt_outer_vertical_margin"
+        android:layout_marginLeft="@dimen/c_debt_outer_horizontal_margin"
+        android:layout_marginRight="@dimen/c_debt_outer_horizontal_margin"
+        android:layout_marginTop="@dimen/c_debt_outer_vertical_margin"
         android:clickable="true"
         android:foreground="?android:attr/selectableItemBackground"
-        app:cardCornerRadius="@dimen/b_preview_radius"
-        app:cardElevation="@dimen/b_preview_elevation">
+        app:cardCornerRadius="@dimen/c_debt_radius"
+        app:cardElevation="@dimen/c_debt_elevation">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="wrap_content">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="@dimen/b_preview_padding">
+                android:padding="@dimen/c_debt_padding">
 
-                <TextView
-                    android:id="@+id/receive_name"
-                    android:text="name"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:textSize="17sp" />
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/receive_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/c_debt_name_textsize" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/c_debt_detail_textsize" />
+
+                    <TextView
+                        android:id="@+id/receive_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="@dimen/c_debt_detail_textsize" />
+                </LinearLayout>
 
                 <TextView
                     android:id="@+id/receive_amount"
-                    android:text="amount"
-                    android:gravity="right"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:textSize="17sp" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="@dimen/b_preview_padding">
-
-                <TextView
-                    android:id="@+id/receive_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:textSize="@dimen/b_preview_textSize" />
+                    android:layout_gravity="bottom"
+                    android:textSize="@dimen/c_debt_amount_textsize" />
+            </LinearLayout>
 
-        </LinearLayout>
-
-        </LinearLayout>
-
+            <ImageView
+                android:id="@+id/receive_background"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/cancel_line"
+                android:visibility="invisible" />
+        </FrameLayout>
     </android.support.v7.widget.CardView>
 
 </LinearLayout>

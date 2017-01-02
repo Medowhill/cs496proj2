@@ -8,14 +8,12 @@
         android:id="@+id/pay_cardView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/b_preview_outer_vertical_margin"
-        android:layout_marginLeft="@dimen/b_preview_outer_horizontal_margin"
-        android:layout_marginRight="@dimen/b_preview_outer_horizontal_margin"
-        android:layout_marginTop="@dimen/b_preview_outer_vertical_margin"
-        android:clickable="true"
-        android:foreground="?android:attr/selectableItemBackground"
-        app:cardCornerRadius="@dimen/b_preview_radius"
-        app:cardElevation="@dimen/b_preview_elevation">
+        android:layout_marginBottom="@dimen/c_debt_outer_vertical_margin"
+        android:layout_marginLeft="@dimen/c_debt_outer_horizontal_margin"
+        android:layout_marginRight="@dimen/c_debt_outer_horizontal_margin"
+        android:layout_marginTop="@dimen/c_debt_outer_vertical_margin"
+        app:cardCornerRadius="@dimen/c_debt_radius"
+        app:cardElevation="@dimen/c_debt_elevation">
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -24,59 +22,39 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:padding="@dimen/c_debt_padding">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:padding="@dimen/b_preview_padding">
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
                     <TextView
                         android:id="@+id/pay_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:text="my name"
-                        android:textSize="@dimen/b_preview_textSize" />
-
-                    <TextView
-                        android:id="@+id/pay_amount"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:gravity="right"
-                        android:text="amount"
-                        android:textSize="@dimen/b_preview_textSize" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="@dimen/b_preview_padding">
+                        android:textSize="@dimen/c_debt_name_textsize" />
 
                     <TextView
                         android:id="@+id/pay_account"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:textSize="@dimen/b_preview_textSize" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:padding="@dimen/b_preview_padding">
+                        android:textSize="@dimen/c_debt_detail_textsize" />
 
                     <TextView
                         android:id="@+id/pay_time"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center_vertical"
-                        android:textSize="@dimen/b_preview_textSize" />
-
+                        android:textSize="@dimen/c_debt_detail_textsize" />
                 </LinearLayout>
+
+                <TextView
+                    android:id="@+id/pay_amount"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:textSize="@dimen/c_debt_amount_textsize" />
             </LinearLayout>
 
             <ImageView

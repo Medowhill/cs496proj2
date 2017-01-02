@@ -49,8 +49,8 @@ public class payViewAdapter extends BaseAdapter implements ListAdapter {
         }
     }
 
-    public void add(PayDebt debt) {
-        debts.add(debt);
+    public void add(int position, PayDebt debt) {
+        debts.add(position, debt);
         notifyDataSetChanged();
     }
 
@@ -93,7 +93,7 @@ public class payViewAdapter extends BaseAdapter implements ListAdapter {
 
         PayDebt debt = debts.get(position);
         pay_name.setText(debt.getName());
-        pay_amount.setText(debt.getAmount());
+        pay_amount.setText(debt.getAmount() + "원");
         pay_account.setText(debt.getAccount());
         pay_time.setText(debt.getTime());
         if (debt.isNew())

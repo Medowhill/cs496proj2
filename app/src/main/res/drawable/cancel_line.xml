@@ -8,7 +8,7 @@
 
     <item>
         <rotate xmlns:android="http://schemas.android.com/apk/res/android"
-            android:fromDegrees="165"
+            android:fromDegrees="170"
             android:toDegrees="90">
             <shape android:shape="line">
                 <stroke

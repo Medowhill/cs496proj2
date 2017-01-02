@@ -581,7 +581,7 @@ public class CTabFragment extends Fragment {
     private void solveNewPay(PayDebt pay) {
         if (pay.isNew()) {
             pay.setNew(false);
-            payAdapter.add(pay);
+            payAdapter.add(0, pay);
             //추가된거 보여주기!!! 어떻게?
             // 여기선 JSON을 만들어서 추가해줘야함
         } else {
