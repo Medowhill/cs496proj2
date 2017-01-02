@@ -345,7 +345,8 @@ public class CTabFragment extends Fragment {
 
     public void viewPay(JSONArray payArray) throws JSONException {
         //JSONArray 서버에서 받아옴 (name, account, amount, time)
-        payAdapter = new payViewAdapter(getActivity(), payArray);
+        payAdapter = new payViewAdapter(getActivity(), payArray, mEmail);
+        Log.i("cs496test", payAdapter.getCount() + "");
         payView.setAdapter(payAdapter);
     }
 
@@ -578,23 +579,16 @@ public class CTabFragment extends Fragment {
     }
 
     private void solveNewPay(PayDebt pay) {
-        String email, name, account, amount, time;
         if (pay.isNew()) {
-            email = pay.getEmail();
-            name = pay.getName();
-            account = pay.getAccount();
-            amount = pay.getAmount();
-            time = pay.getTime();
+            pay.setNew(false);
+            payAdapter.add(pay);
             //추가된거 보여주기!!! 어떻게?
             // 여기선 JSON을 만들어서 추가해줘야함
         } else {
-            email = pay.getEmail();
-            account = pay.getAccount();
-            amount = pay.getAmount();
+            payAdapter.update(pay);
             //수정된거 보여주기!!! 어떻게?
             // 여기선 email과 amount로 identify해서, 지워줘야함
         }
-        payAdapter.notifyDataSetChanged();
     }
 
     private void solveLogin() {

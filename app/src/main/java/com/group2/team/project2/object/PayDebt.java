@@ -37,4 +37,8 @@ public class PayDebt {
     public String getTime() {
         return time;
     }
+
+    public void setNew(boolean aNew) {
+        isNew = aNew;
+    }
 }
