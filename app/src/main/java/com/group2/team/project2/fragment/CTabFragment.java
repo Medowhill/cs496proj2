@@ -1,6 +1,5 @@
 package com.group2.team.project2.fragment;
 
-import android.app.Dialog;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -36,6 +35,7 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.group2.team.project2.R;
+import com.group2.team.project2.ReceiveDebtActivity;
 import com.group2.team.project2.adapter.payViewAdapter;
 import com.group2.team.project2.adapter.receiveViewAdapter;
 import com.group2.team.project2.object.PayDebt;
@@ -361,9 +361,14 @@ public class CTabFragment extends Fragment {
     private class receiveViewItemClickListener implements AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            final Dialog dialog = new Dialog(getContext());
-            dialog.setContentView(R.layout.dialog_receive);
-            dialog.setTitle("Detail Receive View");
+            ReceiveDebt receiveDebt = receiveAdapter.getItem(position);
+            Intent intent = new Intent(getContext(), ReceiveDebtActivity.class);
+            intent.putExtra("account", receiveDebt.getAccount());
+            intent.putExtra("time", receiveDebt.getTime());
+            intent.putExtra("amount", receiveDebt.getAmount());
+            intent.putExtra("names", receiveDebt.getNames());
+            intent.putExtra("emails", receiveDebt.getEmails());
+            startActivity(intent);
             /*
             새로운 receive_detail_item 이랑 adapter 만들고,
             Payed click 하면 1) push message 보내고, 가장 밑으로 보내기(List 중에). 추가해야됨
