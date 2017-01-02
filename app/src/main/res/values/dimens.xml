@@ -19,4 +19,5 @@
     <dimen name="c_add_textview_radius">5dp</dimen>
     <dimen name="c_add_textview_margin">5dp</dimen>
     <dimen name="c_add_textview_padding">5dp</dimen>
+    <dimen name="c_fab_margin">24dp</dimen>
 </resources>

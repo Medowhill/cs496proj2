@@ -56,8 +56,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import static com.group2.team.project2.R.layout.dialog_receive;
-
 public class CTabFragment extends Fragment {
 
     private FloatingActionButton fab;
@@ -66,7 +64,7 @@ public class CTabFragment extends Fragment {
     private AutoCompleteTextView autoComplete;
     private LinearLayout layout;
 
-    private static ArrayList<PayDebt> newPays = new ArrayList<>();
+    private static ArrayList<Integer> notifications = new ArrayList<>();
     private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
     private ArrayList<Thread> threads = new ArrayList<>();
     private ArrayList<ReceiveDebt> receiveDebts = new ArrayList<>();
@@ -75,8 +73,8 @@ public class CTabFragment extends Fragment {
     private IntentFilter filter;
     private ListView payView;
     private ListView receiveView;
-    payViewAdapter payAdapter;
-    receiveViewAdapter receiveAdapater;
+    private payViewAdapter payAdapter;
+    private receiveViewAdapter receiveAdapter;
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -153,6 +151,19 @@ public class CTabFragment extends Fragment {
         }
     };
 
+    private Handler loginHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            try {
+                JSONObject object = new JSONObject((String) msg.obj);
+                viewPay(object.getJSONArray("pay"));
+                viewReceive(object.getJSONArray("receive"));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    };
+
     public CTabFragment() {
     }
 
@@ -175,6 +186,7 @@ public class CTabFragment extends Fragment {
                     e.printStackTrace();
                 }
                 sendTokenToServer();
+                solveLogin();
             }
         });
         Bundle param = new Bundle();
@@ -192,11 +204,10 @@ public class CTabFragment extends Fragment {
         super.onStart();
 
         NotificationManager notificationManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+        for (int i = 0; i < notifications.size(); i++)
+            notificationManager.cancel(notifications.get(i));
+        notifications.clear();
 
-        for (int i = 0; i < newPays.size(); i++)
-            notificationManager.cancel(newPays.get(i).getNotification());
-        while (!newPays.isEmpty())
-            solveNewPay(newPays.get(newPays.size() - 1));
         getActivity().registerReceiver(receiver, filter);
     }
 
@@ -206,13 +217,6 @@ public class CTabFragment extends Fragment {
         payView = (ListView) rootView.findViewById(R.id.payView);
         receiveView = (ListView) rootView.findViewById(R.id.receiveView);
         fab = (FloatingActionButton) rootView.findViewById(R.id.c_fab_add);
-
-        try {
-            viewPay();
-            viewReceive();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
         receiveView.setOnItemClickListener(new CTabFragment.receiveViewItemClickListener());
 
         fab.setOnClickListener(new View.OnClickListener() {
@@ -339,32 +343,16 @@ public class CTabFragment extends Fragment {
         return rootView;
     }
 
-    public void viewPay() throws JSONException {
+    public void viewPay(JSONArray payArray) throws JSONException {
         //JSONArray 서버에서 받아옴 (name, account, amount, time)
-        JSONArray payArray = new JSONArray();
-        JSONObject payObj = new JSONObject();
-        payObj.put("email", "ymk1211@hotmail.com");
-        payObj.put("name", "YUN MIN KYU");
-        payObj.put("amount", "10,000");
-        payObj.put("account", "국민은행 298702-04-079685");
-        payObj.put("time", "2017-01-02");
-        payArray.put(payObj);
         payAdapter = new payViewAdapter(getActivity(), payArray);
         payView.setAdapter(payAdapter);
     }
 
-    public void viewReceive() throws JSONException {
-        JSONArray receiveArray = new JSONArray();
-        JSONObject receiveObj = new JSONObject();
-        receiveObj.put("email", "ymk1211@hotmail.com");
-        receiveObj.put("name", "YUN MIN KYU 외 3명");
-        receiveObj.put("amount", "10,000");
-        receiveObj.put("account", "국민은행 298702-04-079685");
-        receiveObj.put("time", "2017-01-02");
-        receiveArray.put(receiveObj);
+    public void viewReceive(JSONArray receiveArray) throws JSONException {
         //JSONArray 서버에서 받아옴 (name, account, amount, time)
-        receiveAdapater = new receiveViewAdapter(getActivity(), receiveArray);
-        receiveView.setAdapter(receiveAdapater);
+        receiveAdapter = new receiveViewAdapter(getActivity(), receiveArray);
+        receiveView.setAdapter(receiveAdapter);
     }
 
     private class receiveViewItemClickListener implements AdapterView.OnItemClickListener {
@@ -585,8 +573,8 @@ public class CTabFragment extends Fragment {
         }.start();
     }
 
-    public static void addPay(PayDebt pay) {
-        newPays.add(pay);
+    public static void addNotification(int i) {
+        notifications.add(i);
     }
 
     private void solveNewPay(PayDebt pay) {
@@ -607,6 +595,48 @@ public class CTabFragment extends Fragment {
             // 여기선 email과 amount로 identify해서, 지워줘야함
         }
         payAdapter.notifyDataSetChanged();
-        newPays.remove(pay);
+    }
+
+    private void solveLogin() {
+        new Thread() {
+            @Override
+            public void run() {
+                threads.add(this);
+                try {
+                    //URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
+                    URL url = new URL("http://143.248.49.156:3000");
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+                    connection.setRequestMethod("GET");
+                    connection.setDoOutput(false);
+                    connection.setDoInput(true);
+                    connection.setUseCaches(false);
+                    connection.setDefaultUseCaches(false);
+                    connection.setRequestProperty("tab", "C");
+                    connection.setRequestProperty("type", "login");
+                    connection.setRequestProperty("email", mEmail);
+
+                    InputStream inputStream = connection.getInputStream();
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+                    byte[] buf = new byte[1024 * 8];
+                    int length;
+                    while ((length = inputStream.read(buf)) != -1) {
+                        out.write(buf, 0, length);
+                    }
+                    byte[] arr = out.toByteArray();
+                    inputStream.close();
+
+                    Message message = new Message();
+                    message.obj = new String(arr);
+                    loginHandler.sendMessage(message);
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                threads.remove(this);
+            }
+        }.start();
     }
 }

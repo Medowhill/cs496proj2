@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
@@ -60,7 +61,7 @@ public class payViewAdapter extends BaseAdapter implements ListAdapter {
         TextView pay_amount = (TextView) convertView.findViewById(R.id.pay_amount);
         TextView pay_account = (TextView) convertView.findViewById(R.id.pay_account);
         TextView pay_time = (TextView) convertView.findViewById(R.id.pay_time);
-
+        ImageView pay_background = (ImageView) convertView.findViewById(R.id.pay_background);
 
         JSONObject pay_json = getItem(position);
 
@@ -70,6 +71,10 @@ public class payViewAdapter extends BaseAdapter implements ListAdapter {
                 pay_amount.setText(pay_json.getString("amount"));
                 pay_account.setText(pay_json.getString("account"));
                 pay_time.setText(pay_json.getString("time"));
+                if (pay_json.getBoolean("payed"))
+                    pay_background.setVisibility(View.VISIBLE);
+                else
+                    pay_background.setVisibility(View.INVISIBLE);
             } catch (JSONException e) {
                 e.printStackTrace();
             }

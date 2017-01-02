@@ -12,7 +12,6 @@ import android.support.v4.app.NotificationCompat;
 import com.group2.team.project2.MainActivity;
 import com.group2.team.project2.R;
 import com.group2.team.project2.fragment.CTabFragment;
-import com.group2.team.project2.object.PayDebt;
 
 public class PushBroadcastReceiver extends BroadcastReceiver {
 
@@ -21,8 +20,7 @@ public class PushBroadcastReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        String email = intent.getStringExtra("email"), name = intent.getStringExtra("name"), time = intent.getStringExtra("time"),
-                amount = intent.getStringExtra("amount"), account = intent.getStringExtra("account");
+        String name = intent.getStringExtra("name"), amount = intent.getStringExtra("amount"), account = intent.getStringExtra("account");
         boolean isNew = intent.getBooleanExtra("isNew", true);
 
         Intent in = new Intent(context, MainActivity.class);
@@ -41,10 +39,7 @@ public class PushBroadcastReceiver extends BroadcastReceiver {
 
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         notificationManager.notify(notification, notificationBuilder.build());
-
-        PayDebt pay = new PayDebt(email, name, account, amount, time, isNew);
-        pay.setNotification(notification++);
-        CTabFragment.addPay(pay);
+        CTabFragment.addNotification(notification++);
 
         abortBroadcast();
     }

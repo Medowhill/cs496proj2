@@ -4,7 +4,6 @@ public class PayDebt {
 
     private String email, name, account, amount, time;
     private boolean isNew;
-    private int notification;
 
     public PayDebt(String email, String name, String account, String amount, String time, boolean isNew) {
         this.email = email;
@@ -37,13 +36,5 @@ public class PayDebt {
 
     public String getTime() {
         return time;
-    }
-
-    public int getNotification() {
-        return notification;
-    }
-
-    public void setNotification(int notification) {
-        this.notification = notification;
     }
 }
