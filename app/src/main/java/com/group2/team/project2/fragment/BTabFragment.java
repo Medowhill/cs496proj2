@@ -70,8 +70,6 @@ public class BTabFragment extends Fragment {
     public final static int REQUEST_GALLERY = 0, REQUEST_CAMERA = 1;
 
     private final int PERMISSION_REQUEST_STORAGE = 0;
-    private final String IP = "52.78.240.193";
-    private final int PORT = 3000;
 
     private LinearLayout layout;
     private FloatingActionButton fabAdd, fabCamera, fabGallery, fabCancel;
@@ -344,7 +342,7 @@ public class BTabFragment extends Fragment {
             public void run() {
                 threads.add(this);
                 try {
-                    URL url = new URL("http://" + IP + ":" + PORT);
+                    URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
                     connection.setRequestMethod("GET");
@@ -456,7 +454,7 @@ public class BTabFragment extends Fragment {
                 message.arg1 = -1;
                 threads.add(this);
                 try {
-                    URL url = new URL("http://" + IP + ":" + PORT);
+                    URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
                     connection.setRequestMethod("POST");
@@ -501,7 +499,7 @@ public class BTabFragment extends Fragment {
             public void run() {
                 threads.add(this);
                 try {
-                    URL url = new URL("http://" + IP + ":" + PORT);
+                    URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
                     connection.setRequestMethod("GET");
@@ -545,7 +543,7 @@ public class BTabFragment extends Fragment {
             public void run() {
                 threads.add(this);
                 try {
-                    URL url = new URL("http://" + IP + ":" + PORT);
+                    URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
                     connection.setRequestMethod("DELETE");

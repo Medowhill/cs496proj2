@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string-array name="c_add_banks">
+        <item>우리은행</item>
+        <item>신한은행</item>
+        <item>SC 제일은행</item>
+        <item>IBK 기업은행</item>
+        <item>하나은행</item>
+        <item>씨티은행</item>
+        <item>농협</item>
+        <item>대구은행</item>
+        <item>KB</item>
+        <item>KEB 외환은행</item>
+        <item>수협은행</item>
+        <item>광주은행</item>
+        <item>부산은행</item>
+        <item>경남은행</item>
+        <item>전북은행</item>
+        <item>제주은행</item>
+    </string-array>
+
+</resources>

@@ -2,4 +2,17 @@
     <string name="app_name">Project2</string>
     <string name="menu_main_logout">Logout</string>
     <string name="facebook_app_id">1819898281601617</string>
+    <string name="server_ip">52.78.240.193</string>
+    <string name="server_port">3000</string>
+
+    <string name="c_add_positive">Submit</string>
+    <string name="c_add_negative">Cancel</string>
+    <string name="c_add_button">Add</string>
+    <string name="c_add_toast_your">This email is your email.</string>
+    <string name="c_add_toast_already">You already added this email.</string>
+    <string name="c_add_toast_unavailable">This email is not registered yet.</string>
+    <string name="c_add_total">총 금액</string>
+    <string name="c_add_person">1인당 금액</string>
+    <string name="c_add_email_hint">Enter email</string>
+    <string name="c_add_account_hint">Enter your account number</string>
 </resources>

@@ -14,4 +14,9 @@
     <dimen name="b_preview_textSize">17sp</dimen>
     <dimen name="b_fab_outer_margin">24dp</dimen>
     <dimen name="b_fab_inner_margin">10dp</dimen>
+
+    <dimen name="c_add_margin">5dp</dimen>
+    <dimen name="c_add_textview_radius">5dp</dimen>
+    <dimen name="c_add_textview_margin">5dp</dimen>
+    <dimen name="c_add_textview_padding">5dp</dimen>
 </resources>
