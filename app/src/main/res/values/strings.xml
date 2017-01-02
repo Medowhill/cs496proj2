@@ -4,6 +4,7 @@
     <string name="facebook_app_id">1819898281601617</string>
     <string name="server_ip">52.78.240.193</string>
     <string name="server_port">3000</string>
+    <string name="intent_action_broadcast_push">com.group2.team.proj2.broadcast_push</string>
 
     <string name="c_add_positive">Submit</string>
     <string name="c_add_negative">Cancel</string>
@@ -14,5 +15,9 @@
     <string name="c_add_total">총 금액</string>
     <string name="c_add_person">1인당 금액</string>
     <string name="c_add_email_hint">Enter email</string>
-    <string name="c_add_account_hint">Enter your account number</string>
+    <string name="c_add_account_hint">Account number</string>
+    <string name="c_notification_new">보내야할 돈!</string>
+    <string name="c_notification_old">송금 확인됨!</string>
+    <string name="c_notification_text_new">보낼 것을 부탁함</string>
+    <string name="c_notification_text_old">보낸 것을 확인함</string>
 </resources>

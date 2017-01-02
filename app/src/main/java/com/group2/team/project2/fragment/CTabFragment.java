@@ -1,7 +1,11 @@
 package com.group2.team.project2.fragment;
 
+import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
-import android.database.DataSetObserver;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -21,7 +25,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,6 +33,7 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.group2.team.project2.R;
+import com.group2.team.project2.object.PayDebt;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -49,9 +53,22 @@ public class CTabFragment extends Fragment {
     private AutoCompleteTextView autoComplete;
     private LinearLayout layout;
 
+    private static ArrayList<PayDebt> newPays = new ArrayList<>();
     private ArrayList<Thread> threads = new ArrayList<>();
     private ArrayList<String> sendEmails = new ArrayList<>();
     private String mEmail;
+    private IntentFilter filter;
+
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String email = intent.getStringExtra("email"), name = intent.getStringExtra("name"), time = intent.getStringExtra("time"),
+                    amount = intent.getStringExtra("amount"), account = intent.getStringExtra("account");
+            boolean isNew = intent.getBooleanExtra("isNew", true);
+            solveNewPay(new PayDebt(email, name, account, amount, time, isNew));
+            abortBroadcast();
+        }
+    };
 
     private Handler autoCompleteHandler = new Handler() {
         @Override
@@ -125,12 +142,23 @@ public class CTabFragment extends Fragment {
         param.putString("fields", "email");
         graphRequest.setParameters(param);
         graphRequest.executeAsync();
+
+        filter = new IntentFilter();
+        filter.addAction(getString(R.string.intent_action_broadcast_push));
+        filter.setPriority(1);
     }
 
     @Override
     public void onStart() {
         super.onStart();
 
+        NotificationManager notificationManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+
+        for (int i = 0; i < newPays.size(); i++)
+            notificationManager.cancel(newPays.get(i).getNotification());
+        while (!newPays.isEmpty())
+            solveNewPay(newPays.get(newPays.size() - 1));
+        getActivity().registerReceiver(receiver, filter);
     }
 
     @Override
@@ -176,7 +204,48 @@ public class CTabFragment extends Fragment {
 
                     @Override
                     public void afterTextChanged(Editable s) {
+                        String total = editTextTotal.getText().toString();
+                        if (s.toString().length() == 0) {
+                            if (total.length() != 0)
+                                editTextTotal.setText("");
+                            return;
+                        }
+                        int x = Integer.parseInt(s.toString()), y, n = sendEmails.size();
+                        if (total.length() == 0)
+                            y = 0;
+                        else
+                            y = Integer.parseInt(total);
+                        int d = y - n * x;
+                        Log.i("cs496test", d + "");
+                        if (n > 0 && (d >= n || d < 0))
+                            editTextTotal.setText(x * n + "");
+                    }
+                });
+                editTextTotal.addTextChangedListener(new TextWatcher() {
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    }
 
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        String person = editTextPerson.getText().toString();
+                        if (s.toString().length() == 0) {
+                            if (person.length() != 0)
+                                editTextPerson.setText("");
+                            return;
+                        }
+                        int x = Integer.parseInt(s.toString()), y, n = sendEmails.size();
+                        if (person.length() == 0)
+                            y = 0;
+                        else
+                            y = Integer.parseInt(person);
+                        int d = x - n * y;
+                        if (n > 0 && (d >= n || d < 0))
+                            editTextPerson.setText(x / n + "");
                     }
                 });
                 new AlertDialog.Builder(getActivity())
@@ -198,6 +267,16 @@ public class CTabFragment extends Fragment {
     public void onStop() {
         super.onStop();
 
+        getActivity().unregisterReceiver(receiver);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        for (Thread thread : threads)
+            if (thread.isAlive())
+                thread.interrupt();
     }
 
     private void sendTokenToServer() {
@@ -320,5 +399,13 @@ public class CTabFragment extends Fragment {
                 threads.remove(this);
             }
         }.start();
+    }
+
+    public static void addPay(PayDebt pay) {
+        newPays.add(pay);
+    }
+
+    private void solveNewPay(PayDebt pay) {
+        newPays.remove(pay);
     }
 }
