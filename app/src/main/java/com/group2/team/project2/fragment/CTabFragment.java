@@ -326,11 +326,14 @@ public class CTabFragment extends Fragment {
                                 else {
                                     ArrayList<String> emails = new ArrayList<>(), names = new ArrayList<>();
                                     emails.addAll(sendEmails);
-                                    for (String email : emails)
+                                    boolean[] payed = new boolean[sendEmails.size()];
+                                    for (String email : emails) {
                                         names.add(mNames.get(mEmails.indexOf(email)));
+                                        payed[mEmails.indexOf(email)] = false;
+                                    }
                                     addDebt(new ReceiveDebt(mName, getResources().getStringArray(R.array.c_add_banks)[spinner.getSelectedItemPosition()]
                                             + " " + editTextAccount.getText().toString(), editTextPerson.getText().toString(),
-                                            format.format(Calendar.getInstance().getTime()), emails, names));
+                                            format.format(Calendar.getInstance().getTime()), emails, names, payed, false));
                                     alertDialog.dismiss();
                                 }
                             }
@@ -351,8 +354,7 @@ public class CTabFragment extends Fragment {
     }
 
     public void viewReceive(JSONArray receiveArray) throws JSONException {
-        //JSONArray 서버에서 받아옴 (name, account, amount, time)
-        receiveAdapter = new receiveViewAdapter(getActivity(), receiveArray);
+        receiveAdapter = new receiveViewAdapter(getActivity(), receiveArray, mEmail);
         receiveView.setAdapter(receiveAdapter);
     }
 
@@ -366,9 +368,9 @@ public class CTabFragment extends Fragment {
             새로운 receive_detail_item 이랑 adapter 만들고,
             Payed click 하면 1) push message 보내고, 가장 밑으로 보내기(List 중에). 추가해야됨
              */
-
 //            OK 눌러서 dialog 끄면:
-//            payAdapter.notifyDataSetChanged();
+//                receiveAdapter.update(receive);
+//            payAdapter.notifyDataSetChanged(); <-- 이거 adapter쪽으로 옮겨야함
         }
     }
 
@@ -586,8 +588,6 @@ public class CTabFragment extends Fragment {
             // 여기선 JSON을 만들어서 추가해줘야함
         } else {
             payAdapter.update(pay);
-            //수정된거 보여주기!!! 어떻게?
-            // 여기선 email과 amount로 identify해서, 지워줘야함
         }
     }
 

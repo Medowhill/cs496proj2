@@ -11,15 +11,17 @@ public class ReceiveDebt {
     private String account, amount, time, name;
     private ArrayList<String> emails, names;
     private boolean[] payed;
+    private boolean allpayed;
 
-    public ReceiveDebt(String name, String account, String amount, String time, ArrayList<String> emails, ArrayList<String> names) {
+    public ReceiveDebt(String name, String account, String amount, String time, ArrayList<String> emails, ArrayList<String> names, boolean[] payed, boolean allpayed) {
         this.name = name;
         this.account = account;
         this.amount = amount;
         this.time = time;
         this.emails = emails;
         this.names = names;
-        this.payed = new boolean[emails.size()];
+        this.payed = payed;
+        this.allpayed = allpayed;
     }
 
     public String getAccount() {
@@ -49,4 +51,6 @@ public class ReceiveDebt {
     public boolean[] getPayed() {
         return payed;
     }
+
+    public boolean getAllPayed() { return allpayed; }
 }
