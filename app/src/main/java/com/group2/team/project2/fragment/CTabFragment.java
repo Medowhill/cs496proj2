@@ -1,5 +1,6 @@
 package com.group2.team.project2.fragment;
 
+import android.app.Dialog;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -19,11 +20,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,6 +36,8 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.group2.team.project2.R;
+import com.group2.team.project2.adapter.payViewAdapter;
+import com.group2.team.project2.adapter.receiveViewAdapter;
 import com.group2.team.project2.object.PayDebt;
 
 import org.json.JSONArray;
@@ -47,6 +52,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
+import static com.group2.team.project2.R.layout.dialog_receive;
+
 public class CTabFragment extends Fragment {
 
     private FloatingActionButton fab;
@@ -58,6 +65,10 @@ public class CTabFragment extends Fragment {
     private ArrayList<String> sendEmails = new ArrayList<>();
     private String mEmail;
     private IntentFilter filter;
+    private ListView payView;
+    private ListView receiveView;
+    payViewAdapter payAdapter;
+    receiveViewAdapter receiveAdapater;
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
@@ -164,7 +175,17 @@ public class CTabFragment extends Fragment {
     @Override
     public View onCreateView(final LayoutInflater inflater, ViewGroup container, final Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_c, container, false);
+        payView = (ListView) rootView.findViewById(R.id.payView);
+        receiveView = (ListView) rootView.findViewById(R.id.receiveView);
         fab = (FloatingActionButton) rootView.findViewById(R.id.c_fab_add);
+
+        try {
+            viewPay();
+            viewReceive();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        receiveView.setOnItemClickListener(new CTabFragment.receiveViewItemClickListener());
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -261,6 +282,50 @@ public class CTabFragment extends Fragment {
             }
         });
         return rootView;
+    }
+
+    public void viewPay() throws JSONException {
+        //JSONArray 서버에서 받아옴 (name, account, amount, time)
+        JSONArray payArray = new JSONArray();
+        JSONObject payObj = new JSONObject();
+        payObj.put("email", "ymk1211@hotmail.com");
+        payObj.put("name", "YUN MIN KYU");
+        payObj.put("amount", "10,000");
+        payObj.put("account", "국민은행 298702-04-079685");
+        payObj.put("time", "2017-01-02");
+        payArray.put(payObj);
+        payAdapter = new payViewAdapter(getActivity(), payArray);
+        payView.setAdapter(payAdapter);
+    }
+
+    public void viewReceive() throws JSONException {
+        JSONArray receiveArray = new JSONArray();
+        JSONObject receiveObj = new JSONObject();
+        receiveObj.put("email", "ymk1211@hotmail.com");
+        receiveObj.put("name", "YUN MIN KYU 외 3명");
+        receiveObj.put("amount", "10,000");
+        receiveObj.put("account", "국민은행 298702-04-079685");
+        receiveObj.put("time", "2017-01-02");
+        receiveArray.put(receiveObj);
+        //JSONArray 서버에서 받아옴 (name, account, amount, time)
+        receiveAdapater = new receiveViewAdapter(getActivity(), receiveArray);
+        receiveView.setAdapter(receiveAdapater);
+    }
+
+    private class receiveViewItemClickListener implements AdapterView.OnItemClickListener {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            final Dialog dialog = new Dialog(getContext());
+            dialog.setContentView(R.layout.dialog_receive);
+            dialog.setTitle("Detail Receive View");
+            /*
+            새로운 receive_detail_item 이랑 adapter 만들고,
+            Payed click 하면 1) push message 보내고, 가장 밑으로 보내기(List 중에). 추가해야됨
+             */
+
+//            OK 눌러서 dialog 끄면:
+//            payAdapter.notifyDataSetChanged();
+        }
     }
 
     @Override
@@ -406,6 +471,23 @@ public class CTabFragment extends Fragment {
     }
 
     private void solveNewPay(PayDebt pay) {
+        String email, name, account, amount, time;
+        if (pay.isNew()) {
+            email = pay.getEmail();
+            name = pay.getName();
+            account = pay.getAccount();
+            amount = pay.getAmount();
+            time = pay.getTime();
+            //추가된거 보여주기!!! 어떻게?
+            // 여기선 JSON을 만들어서 추가해줘야함
+        } else {
+            email = pay.getEmail();
+            account = pay.getAccount();
+            amount = pay.getAmount();
+            //수정된거 보여주기!!! 어떻게?
+            // 여기선 email과 amount로 identify해서, 지워줘야함
+        }
+        payAdapter.notifyDataSetChanged();
         newPays.remove(pay);
     }
 }

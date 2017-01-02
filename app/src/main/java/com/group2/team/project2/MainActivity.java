@@ -20,6 +20,8 @@ import android.widget.ImageView;
 
 import com.facebook.login.LoginManager;
 import com.group2.team.project2.event.BResultEvent;
+import com.group2.team.project2.fragment.ATabFragment;
+import com.group2.team.project2.fragment.BTabFragment;
 import com.group2.team.project2.fragment.CTabFragment;
 
 import uk.co.senab.photoview.PhotoViewAttacher;
@@ -126,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public int getCount() {
-            //return 3;
+//            return 3;
             return 1;
         }
 

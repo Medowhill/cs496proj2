@@ -1,8 +1,6 @@
 package com.group2.team.project2.adapter;
 
 import android.app.Activity;
-import android.support.v4.app.FragmentActivity;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -10,31 +8,27 @@ import android.widget.ListAdapter;
 import android.widget.TextView;
 
 import com.group2.team.project2.R;
-import com.group2.team.project2.fragment.ATabFragment;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-
 /**
- * Created by q on 2016-12-31.
+ * Created by q on 2017-01-02.
  */
 
-public class ContactviewAdapter extends BaseAdapter implements ListAdapter {
+public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
 
     private final Activity activity;
     private final JSONArray jsonArray;
 
-    public ContactviewAdapter(Activity activity, JSONArray jsonArray) {
+    public receiveViewAdapter(Activity activity, JSONArray jsonArray) {
         assert activity != null;
         assert jsonArray != null;
 
         this.activity = activity;
         this.jsonArray = jsonArray;
     }
-
 
     @Override
     public int getCount() {
@@ -60,23 +54,20 @@ public class ContactviewAdapter extends BaseAdapter implements ListAdapter {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         if (convertView == null)
-            convertView = activity.getLayoutInflater().inflate(R.layout.contact_item, null);
+            convertView = activity.getLayoutInflater().inflate(R.layout.receive_item, null);
 
-        TextView topText = (TextView) convertView.findViewById(R.id.toptext);
-        TextView bottomText = (TextView) convertView.findViewById(R.id.bottomtext);
+        TextView pay_name = (TextView) convertView.findViewById(R.id.receive_name);
+        TextView pay_amount = (TextView) convertView.findViewById(R.id.receive_amount);
+        TextView pay_time = (TextView) convertView.findViewById(R.id.receive_time);
 
 
-        JSONObject json_data = getItem(position);
+        JSONObject pay_json = getItem(position);
 
-        if (null != json_data) {
-            String tt = null;
-            String bt = null;
+        if (pay_json != null) {
             try {
-                tt = json_data.getString("name");
-                topText.setText(tt);
-                if (json_data.has("mobile_number"))
-                    bt = json_data.getString("mobile_number");
-                bottomText.setText(bt);
+                pay_name.setText(pay_json.getString("name"));
+                pay_amount.setText(pay_json.getString("amount"));
+                pay_time.setText(pay_json.getString("time"));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
