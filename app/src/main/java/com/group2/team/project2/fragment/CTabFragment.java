@@ -1,6 +1,5 @@
 package com.group2.team.project2.fragment;
 
-import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,7 +9,6 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -32,16 +30,16 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.AccessToken;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.group2.team.project2.EventBus;
 import com.group2.team.project2.R;
-import com.group2.team.project2.ReceiveDebtActivity;
+import com.group2.team.project2.adapter.detailReceiveAdapter;
 import com.group2.team.project2.adapter.payViewAdapter;
 import com.group2.team.project2.adapter.receiveViewAdapter;
-import com.group2.team.project2.event.CResultEvent;
 import com.group2.team.project2.object.PayDebt;
 import com.group2.team.project2.object.ReceiveDebt;
-import com.squareup.otto.Subscribe;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -59,8 +57,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 public class CTabFragment extends Fragment {
-
-    private static final int REQUEST_DETAIL = 100;
 
     private FloatingActionButton fab;
 
@@ -180,17 +176,36 @@ public class CTabFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        EventBus.getInstance().register(this);
         filter = new IntentFilter();
         filter.addAction(getString(R.string.intent_action_broadcast_push));
         filter.setPriority(1);
+
+        AccessToken token = AccessToken.getCurrentAccessToken();
+        GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
+            @Override
+            public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
+                try {
+                    mName = jsonObject.getString("name");
+                    mEmail = jsonObject.getString("email");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                sendTokenToServer();
+                getDataFromServer();
+            }
+        });
+        Bundle param = new Bundle();
+        param.putString("fields", "email,name");
+        graphRequest.setParameters(param);
+        graphRequest.executeAsync();
     }
 
     @Override
     public void onStart() {
         super.onStart();
 
-        getDataFromServer();
+        if (mEmail != null)
+            getDataFromServer();
 
         NotificationManager notificationManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
         for (int i = 0; i < notifications.size(); i++)
@@ -333,62 +348,36 @@ public class CTabFragment extends Fragment {
         return rootView;
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        EventBus.getInstance().unregister(this);
-    }
-
-    @SuppressWarnings("unused")
-    @Subscribe
-    public void onActivityResultEvent(@NonNull CResultEvent event) {
-        onActivityResult(event.getRequestCode(), event.getResultCode(), event.getData());
-    }
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.i("cs496", requestCode + ", " + resultCode);
-        switch (requestCode) {
-            case REQUEST_DETAIL:
-                if (resultCode == Activity.RESULT_OK) {
-                    int position = data.getIntExtra("position", -1);
-                    boolean[] payed = data.getBooleanArrayExtra("payed");
-                    receiveAdapter.update(position, payed);
-                }
-                break;
-        }
-    }
-
     public void viewPay(JSONArray payArray) throws JSONException {
         //JSONArray 서버에서 받아옴 (name, account, amount, time)
-        payAdapter = new payViewAdapter(getActivity(), payArray, mEmail);
+        payAdapter = new payViewAdapter(payArray, mEmail);
         payView.setAdapter(payAdapter);
     }
 
     public void viewReceive(JSONArray receiveArray) throws JSONException {
-        receiveAdapter = new receiveViewAdapter(getActivity(), receiveArray, mEmail);
+        receiveAdapter = new receiveViewAdapter(receiveArray);
         receiveView.setAdapter(receiveAdapter);
     }
 
     private class receiveViewItemClickListener implements AdapterView.OnItemClickListener {
         @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            Log.d("Clicked", "Clicked");
+        public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
             ReceiveDebt receiveDebt = receiveAdapter.getItem(position);
-            Intent intent = new Intent(getContext(), ReceiveDebtActivity.class);
-            intent.putExtra("amount", receiveDebt.getAmount());
-            intent.putExtra("names", receiveDebt.getNames());
-            intent.putExtra("payed", receiveDebt.getPayed());
-            intent.putExtra("allPayed", receiveDebt.getAllPayed());
-            intent.putExtra("position", position);
-            startActivityForResult(intent, REQUEST_DETAIL);
-            /*
-            새로운 receive_detail_item 이랑 adapter 만들고,
-            Payed click 하면 1) push message 보내고, 가장 밑으로 보내기(List 중에). 추가해야됨
-             */
-//            OK 눌러서 dialog 끄면:
-//                receiveAdapter.update(receive);
-//            payAdapter.notifyDataSetChanged(); <-- 이거 adapter쪽으로 옮겨야함
+            View v = getActivity().getLayoutInflater().inflate(R.layout.dialog_receive, null);
+            ListView list = (ListView) v.findViewById(R.id.receiveDetailView);
+            final detailReceiveAdapter adapter = new detailReceiveAdapter(receiveDebt.getAmount(), receiveDebt.getNames(), receiveDebt.getPayed());
+            list.setAdapter(adapter);
+
+            new AlertDialog.Builder(getActivity())
+                    .setView(v)
+                    .setPositiveButton(R.string.c_receive_positive, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            receiveAdapter.update(position);
+                        }
+                    })
+                    .setNegativeButton(R.string.c_receive_negative, null)
+                    .show();
         }
     }
 

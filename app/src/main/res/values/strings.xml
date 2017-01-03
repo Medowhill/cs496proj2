@@ -23,4 +23,6 @@
     <string name="c_add_toast_noperson">No one is added.</string>
     <string name="c_add_toast_noamount">You do not enter the amount.</string>
     <string name="c_add_toast_noaccount">You do not enter the account.</string>
+    <string name="c_receive_positive">Submit</string>
+    <string name="c_receive_negative">Cancel</string>
 </resources>

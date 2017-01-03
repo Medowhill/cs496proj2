@@ -12,7 +12,6 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -21,8 +20,6 @@ import android.widget.ImageView;
 
 import com.facebook.login.LoginManager;
 import com.group2.team.project2.event.BResultEvent;
-import com.group2.team.project2.event.CResultEvent;
-import com.group2.team.project2.fragment.BTabFragment;
 import com.group2.team.project2.fragment.CTabFragment;
 
 import uk.co.senab.photoview.PhotoViewAttacher;
@@ -56,18 +53,11 @@ public class MainActivity extends AppCompatActivity {
         imageView = (ImageView) findViewById(R.id.main_imageView);
         imageView.setBackgroundColor(Color.rgb(0, 0, 0));
         attacher = new PhotoViewAttacher(imageView);
-
-        String name = getIntent().getStringExtra("name"), email = getIntent().getStringExtra("email");
-        BTabFragment.setUser(email);
-        CTabFragment.setUser(name, email);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.i("cs496", requestCode + ", " + resultCode);
         EventBus.getInstance().post(BResultEvent.create(requestCode, resultCode, data));
-        EventBus.getInstance().post(CResultEvent.create(requestCode, resultCode, data));
-        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override

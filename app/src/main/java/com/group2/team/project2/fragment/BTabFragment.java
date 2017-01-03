@@ -35,6 +35,9 @@ import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.facebook.AccessToken;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.group2.team.project2.EventBus;
 import com.group2.team.project2.MainActivity;
 import com.group2.team.project2.R;
@@ -76,7 +79,7 @@ public class BTabFragment extends Fragment {
     private Animation animationFabAddDisappear, animationFabCameraAppear, animationFabGalleryAppear, animationFabCancelAppear,
             animationFabCameraDisappear, animationFabGalleryDisappear, animationFabAddAppear, animationFabCancelDisappear;
 
-    private static String mEmail;
+    private String mEmail;
     private ArrayList<Thread> threads = new ArrayList<>();
     private SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmssSSS");
     private PreviewAdapter adapter;
@@ -137,8 +140,22 @@ public class BTabFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        EventBus.getInstance().register(this);
-        getPhotoList();
+        EventBus.getInstance().register(this);AccessToken token = AccessToken.getCurrentAccessToken();
+        GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
+            @Override
+            public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
+                try {
+                    mEmail = jsonObject.getString("email");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                getPhotoList();
+            }
+        });
+        Bundle param = new Bundle();
+        param.putString("fields", "email,name");
+        graphRequest.setParameters(param);
+        graphRequest.executeAsync();
     }
 
     @Override
@@ -550,9 +567,5 @@ public class BTabFragment extends Fragment {
                 threads.remove(this);
             }
         }.start();
-    }
-
-    public static void setUser(String email) {
-        mEmail = email;
     }
 }

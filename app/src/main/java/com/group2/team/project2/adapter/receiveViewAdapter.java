@@ -1,6 +1,8 @@
 package com.group2.team.project2.adapter;
 
 import android.app.Activity;
+import android.content.Context;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -19,14 +21,10 @@ import java.util.ArrayList;
 
 public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
 
-    private final Activity activity;
     private final ArrayList<ReceiveDebt> debts = new ArrayList<>();
 
-    public receiveViewAdapter(Activity activity, JSONArray jsonArray, String email) {
-        assert activity != null;
+    public receiveViewAdapter(JSONArray jsonArray) {
         assert jsonArray != null;
-
-        this.activity = activity;
 
         int payedStart = 0;
         for (int i = 0; i < jsonArray.length(); i++) {
@@ -73,11 +71,9 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
         return position;
     }
 
-    public void update(int position, boolean[] payed) {
+    public void update(int position) {
         boolean allpayed = true;
         ReceiveDebt debt = debts.get(position);
-        for (int i = 0; i < payed.length; i++)
-            debt.setPayed(i, payed[i]);
         for (int j = 0; j < debt.getPayed().length; j++) {
             if (!debt.getPayed()[j]) {
                 allpayed = false;
@@ -86,11 +82,11 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
         }
         if (allpayed) {
             debt.setAllpayed();
-            if (debts.size() > 1){
+            if (debts.size() > 1) {
                 debts.remove(debt);
                 ReceiveDebt tempDebt = debts.get(0);
-                int temp=0;
-                while (!tempDebt.getAllPayed() && temp < debts.size()){
+                int temp = 0;
+                while (!tempDebt.getAllPayed() && temp < debts.size()) {
                     temp++;
                 }
                 debts.add(temp, debt);
@@ -103,8 +99,10 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        if (convertView == null)
-            convertView = activity.getLayoutInflater().inflate(R.layout.receive_item, null);
+        if (convertView == null) {
+            LayoutInflater inflater = (LayoutInflater) parent.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inflater.inflate(R.layout.receive_item, null);
+        }
 
         TextView receive_name = (TextView) convertView.findViewById(R.id.receive_name);
         TextView receive_amount = (TextView) convertView.findViewById(R.id.receive_amount);

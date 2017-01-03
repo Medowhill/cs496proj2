@@ -10,13 +10,8 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.Arrays;
 
@@ -42,7 +37,8 @@ public class LoginActivity extends AppCompatActivity {
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                startMainActivity();
+                startActivity(new Intent(getApplicationContext(), MainActivity.class));
+                finish();
             }
 
             @Override
@@ -56,8 +52,10 @@ public class LoginActivity extends AppCompatActivity {
         });
         //여기까지 facebook login
 
-        if (isLoggedIn())
-            startMainActivity();
+        if (isLoggedIn()) {
+            startActivity(new Intent(getApplicationContext(), MainActivity.class));
+            finish();
+        }
     }
 
     public boolean isLoggedIn() {
@@ -68,30 +66,5 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         callbackManager.onActivityResult(requestCode, resultCode, data);
-    }
-
-    private void startMainActivity() {
-        AccessToken token = AccessToken.getCurrentAccessToken();
-        GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
-            @Override
-            public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
-                String name = "Unknown", email = "unknown@email";
-                try {
-                    name = jsonObject.getString("name");
-                    email = jsonObject.getString("email");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                intent.putExtra("name", name);
-                intent.putExtra("email", email);
-                startActivity(intent);
-                finish();
-            }
-        });
-        Bundle param = new Bundle();
-        param.putString("fields", "email,name");
-        graphRequest.setParameters(param);
-        graphRequest.executeAsync();
     }
 }

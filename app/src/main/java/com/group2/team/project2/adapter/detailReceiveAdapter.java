@@ -1,6 +1,7 @@
 package com.group2.team.project2.adapter;
 
-import android.app.Activity;
+import android.content.Context;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -14,22 +15,14 @@ import java.util.ArrayList;
 
 public class detailReceiveAdapter extends BaseAdapter implements ListAdapter {
 
-    private final Activity activity;
     private final String amount;
     private final ArrayList<String> names;
     private final boolean[] payed;
 
-    public detailReceiveAdapter(Activity activity, String amount, ArrayList<String> names, boolean[] payed) {
-        assert activity != null;
-
-        this.activity = activity;
+    public detailReceiveAdapter(String amount, ArrayList<String> names, boolean[] payed) {
         this.amount = amount;
         this.names = names;
         this.payed = payed;
-    }
-
-    public boolean[] getPayed() {
-        return payed;
     }
 
     @Override
@@ -49,8 +42,10 @@ public class detailReceiveAdapter extends BaseAdapter implements ListAdapter {
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
-        if (convertView == null)
-            convertView = activity.getLayoutInflater().inflate(R.layout.activity_receive_debt, null);
+        if (convertView == null) {
+            LayoutInflater inflater = (LayoutInflater) parent.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inflater.inflate(R.layout.activity_receive_debt, null);
+        }
 
         TextView receive_name = (TextView) convertView.findViewById(R.id.receive_textView_name);
         TextView receive_amount = (TextView) convertView.findViewById(R.id.receive_textView_amount);

@@ -1,6 +1,7 @@
 package com.group2.team.project2.adapter;
 
-import android.app.Activity;
+import android.content.Context;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -19,14 +20,11 @@ import java.util.ArrayList;
 
 public class payViewAdapter extends BaseAdapter implements ListAdapter {
 
-    private final Activity activity;
     private final ArrayList<PayDebt> debts = new ArrayList<>();
 
-    public payViewAdapter(Activity activity, JSONArray jsonArray, String email) {
-        assert activity != null;
+    public payViewAdapter(JSONArray jsonArray, String email) {
         assert jsonArray != null;
 
-        this.activity = activity;
         int payedStart = 0;
         for (int i = 0; i < jsonArray.length(); i++) {
             try {
@@ -91,8 +89,10 @@ public class payViewAdapter extends BaseAdapter implements ListAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        if (convertView == null)
-            convertView = activity.getLayoutInflater().inflate(R.layout.pay_item, null);
+        if (convertView == null) {
+            LayoutInflater inflater = (LayoutInflater) parent.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            convertView = inflater.inflate(R.layout.pay_item, null);
+        }
 
         TextView pay_name = (TextView) convertView.findViewById(R.id.pay_name);
         TextView pay_amount = (TextView) convertView.findViewById(R.id.pay_amount);
