@@ -1,6 +1,7 @@
 package com.group2.team.project2.fragment;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
@@ -9,6 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
@@ -45,9 +47,18 @@ public class ATabFragment extends Fragment {
     private String ownID;
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
     private String ownEmail;
+    private ProgressDialog dialog;
     ListView listView;
     ContactviewAdapter m_adapter;
     JSONArray contactArray = new JSONArray();
+
+    private Handler dismissDialogHandler = new Handler() {
+
+        @Override
+        public void handleMessage(Message msg) {
+            dialog.dismiss();
+        }
+    };
 
     public ATabFragment() {
     }
@@ -96,6 +107,7 @@ public class ATabFragment extends Fragment {
         postButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                dialog = ProgressDialog.show(getContext(), "", "Please wait", true);
                 try {
                     CrawlPostView();
                 } catch (JSONException e) {
@@ -118,6 +130,9 @@ public class ATabFragment extends Fragment {
             }
         });
         listView.setOnItemClickListener(new ListViewItemClickListener());
+
+        m_adapter = new ContactviewAdapter(getActivity(), contactArray);
+        listView.setAdapter(m_adapter);
         return rootView;
     }
 
@@ -167,7 +182,6 @@ public class ATabFragment extends Fragment {
         JSONArray phoneArray = new JSONArray();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && getActivity().checkSelfPermission(Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, PERMISSIONS_REQUEST_READ_CONTACTS);
-            //After this point you wait for callback in onRequestPermissionsResult(int, String[], int[]) overriden method
         } else {
             phoneArray = readContact();
         }
@@ -176,12 +190,18 @@ public class ATabFragment extends Fragment {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        JSONArray phoneArray = new JSONArray();
         if (requestCode == PERMISSIONS_REQUEST_READ_CONTACTS) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 try {
-                    phoneArray = readContact();
+                    JSONArray phoneArray = readContact();
+                    for (int i = 0; i < phoneArray.length(); i++)
+                        contactArray.put(phoneArray.get(i));
+                    m_adapter.notifyDataSetChanged();
+
+                    SendToHttp(phoneArray);
                 } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
                     e.printStackTrace();
                 }
             } else {
@@ -295,10 +315,11 @@ public class ATabFragment extends Fragment {
     public void CrawlPostView() throws JSONException, IOException {
 
         Log.d("OwnID", ownID);
-        contactArray = queryContact(); //이 친구가 폰 Contact 불러오고
+        JSONArray array = queryContact(); //이 친구가 폰 Contact 불러오고
+        for (int i = 0; i < array.length(); i++)
+            contactArray.put(array.get(i));
+        m_adapter.notifyDataSetChanged();
 
-        m_adapter = new ContactviewAdapter(getActivity(), contactArray);
-        listView.setAdapter(m_adapter);
         JSONArray mkArray = contactArray;
         SendToHttp(mkArray);
 
@@ -349,6 +370,7 @@ public class ATabFragment extends Fragment {
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
+                            dismissDialogHandler.sendEmptyMessage(0);
                         }
                     }
                 }

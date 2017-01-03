@@ -140,7 +140,8 @@ public class BTabFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        EventBus.getInstance().register(this);AccessToken token = AccessToken.getCurrentAccessToken();
+        EventBus.getInstance().register(this);
+        AccessToken token = AccessToken.getCurrentAccessToken();
         GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
             @Override
             public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {

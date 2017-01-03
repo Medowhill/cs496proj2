@@ -5,6 +5,8 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -18,11 +20,17 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.facebook.AccessToken;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.facebook.login.LoginManager;
 import com.group2.team.project2.event.BResultEvent;
 import com.group2.team.project2.fragment.ATabFragment;
 import com.group2.team.project2.fragment.BTabFragment;
 import com.group2.team.project2.fragment.CTabFragment;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import uk.co.senab.photoview.PhotoViewAttacher;
 
@@ -30,19 +38,45 @@ public class MainActivity extends AppCompatActivity {
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
+    private Toolbar toolbar;
     private ViewPager mViewPager;
     private ImageView imageView;
 
     private PhotoViewAttacher attacher;
     private int prevOption;
 
+    private Handler nameHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            toolbar.setTitle((String) msg.obj);
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        AccessToken token = AccessToken.getCurrentAccessToken();
+        GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
+            @Override
+            public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
+                try {
+                    Message message = new Message();
+                    message.obj = jsonObject.getString("name");
+                    nameHandler.sendMessage(message);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        Bundle param = new Bundle();
+        param.putString("fields", "name");
+        graphRequest.setParameters(param);
+        graphRequest.executeAsync();
 
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
