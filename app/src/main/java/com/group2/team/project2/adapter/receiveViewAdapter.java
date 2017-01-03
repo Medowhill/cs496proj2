@@ -73,7 +73,6 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
     public long getItemId(int position) {
         return position;
     }
-
     public void update(ReceiveDebt debt) {
         int i = 0;
         for (ReceiveDebt debt1 : debts) {
