@@ -13,6 +13,15 @@ public class ReceiveDebt {
     private boolean[] payed;
     private boolean allpayed;
 
+    public ReceiveDebt(String name, String account, String amount, String time, ArrayList<String> emails, ArrayList<String> names) {
+        this.name = name;
+        this.account = account;
+        this.amount = amount;
+        this.time = time;
+        this.emails = emails;
+        this.names = names;
+    }
+
     public ReceiveDebt(String name, String account, String amount, String time, ArrayList<String> emails, ArrayList<String> names, boolean[] payed, boolean allpayed) {
         this.name = name;
         this.account = account;

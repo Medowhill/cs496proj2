@@ -35,9 +35,6 @@ import android.view.animation.AnimationUtils;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import com.facebook.AccessToken;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
 import com.group2.team.project2.EventBus;
 import com.group2.team.project2.MainActivity;
 import com.group2.team.project2.R;
@@ -79,10 +76,11 @@ public class BTabFragment extends Fragment {
     private Animation animationFabAddDisappear, animationFabCameraAppear, animationFabGalleryAppear, animationFabCancelAppear,
             animationFabCameraDisappear, animationFabGalleryDisappear, animationFabAddAppear, animationFabCancelDisappear;
 
+    private static String mEmail;
     private ArrayList<Thread> threads = new ArrayList<>();
     private SimpleDateFormat format = new SimpleDateFormat("yyyyMMddHHmmssSSS");
     private PreviewAdapter adapter;
-    private String currentPath, email;
+    private String currentPath;
 
     private Handler previewDataHandler = new Handler() {
         @Override
@@ -138,24 +136,9 @@ public class BTabFragment extends Fragment {
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        EventBus.getInstance().register(this);
 
-        AccessToken token = AccessToken.getCurrentAccessToken();
-        GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
-            @Override
-            public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
-                try {
-                    email = jsonObject.getString("email");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                getPhotoList();
-            }
-        });
-        Bundle param = new Bundle();
-        param.putString("fields", "email");
-        graphRequest.setParameters(param);
-        graphRequest.executeAsync();
+        EventBus.getInstance().register(this);
+        getPhotoList();
     }
 
     @Override
@@ -350,7 +333,7 @@ public class BTabFragment extends Fragment {
                     connection.setDoInput(true);
                     connection.setUseCaches(false);
                     connection.setDefaultUseCaches(false);
-                    connection.setRequestProperty("email", email);
+                    connection.setRequestProperty("email", mEmail);
                     connection.setRequestProperty("tab", "B");
                     connection.setRequestProperty("type", "list");
 
@@ -465,7 +448,7 @@ public class BTabFragment extends Fragment {
                     connection.setRequestProperty("tab", "B");
                     connection.setRequestProperty("time", time);
                     connection.setRequestProperty("len", arrThumb.length + "");
-                    connection.setRequestProperty("email", email);
+                    connection.setRequestProperty("email", mEmail);
 
                     OutputStream outputStream = connection.getOutputStream();
                     outputStream.write(arrThumb);
@@ -510,7 +493,7 @@ public class BTabFragment extends Fragment {
                     connection.setRequestProperty("tab", "B");
                     connection.setRequestProperty("type", "photo");
                     connection.setRequestProperty("time", preview.getTime());
-                    connection.setRequestProperty("email", email);
+                    connection.setRequestProperty("email", mEmail);
 
                     InputStream inputStream = connection.getInputStream();
                     ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -553,7 +536,7 @@ public class BTabFragment extends Fragment {
                     connection.setDefaultUseCaches(false);
                     connection.setRequestProperty("tab", "B");
                     connection.setRequestProperty("time", time);
-                    connection.setRequestProperty("email", email);
+                    connection.setRequestProperty("email", mEmail);
 
                     InputStream inputStream = connection.getInputStream();
                     byte[] arr = new byte[inputStream.available()];
@@ -567,5 +550,9 @@ public class BTabFragment extends Fragment {
                 threads.remove(this);
             }
         }.start();
+    }
+
+    public static void setUser(String email) {
+        mEmail = email;
     }
 }

@@ -17,8 +17,6 @@ import java.util.ArrayList;
 
 public class ReceiveDebtActivity extends Activity {
 
-    ReceiveDebt debt;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,41 +31,19 @@ public class ReceiveDebtActivity extends Activity {
         ArrayList<String> names = getIntent().getStringArrayListExtra("names");
         ArrayList<String> emails = getIntent().getStringArrayListExtra("emails");
         boolean[] payed = getIntent().getBooleanArrayExtra("payed");
-        boolean allPayed = getIntent().getBooleanExtra("allpayed", false);
+        final int position = getIntent().getIntExtra("position", -1);
 
-        debt = new ReceiveDebt(name, account, amount, time, emails, names, payed, allPayed);
-
-        detailReceiveAdapter adapter = new detailReceiveAdapter(this, debt);
+        final detailReceiveAdapter adapter = new detailReceiveAdapter(this, amount, names, payed);
         list.setAdapter(adapter);
 
         Button receive_ok_button = (Button) findViewById(R.id.receive_ok_button);
         receive_ok_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean allpayed = true;
-                for (int i=0; i < debt.getPayed().length; i++){
-                    if (!debt.getPayed()[0])
-                        allpayed = false;
-                }
-                if (allpayed)
-                    debt.setAllpayed();
-                Log.d("Activity TEST", debt.getName());
-                Log.d("Activity TEST", debt.getAccount());
-                Log.d("Activity TEST", debt.getTime());
-                Log.d("Activity TEST", debt.getAmount());
-                Log.d("Activity TEST", debt.getNames().toString());
-                Log.d("Activity TEST", debt.getEmails().toString());
-                Log.d("Activity TEST", String.valueOf(debt.getPayed()[0]));
-                Log.d("Activity TEST", String.valueOf(debt.getAllPayed()));
                 //receiveAdapter.update();
                 Bundle bundle = new Bundle();
-                bundle.putString("name", debt.getName());
-                bundle.putString("account", debt.getAccount());
-                bundle.putString("amount", debt.getAmount());
-                bundle.putString("time", debt.getTime());
-                bundle.putStringArrayList("emails", debt.getEmails());
-                bundle.putStringArrayList("names", debt.getNames());
-                bundle.putBooleanArray("getpayed", debt.getPayed());
+                bundle.putBooleanArray("payed", adapter.getPayed());
+                bundle.putInt("position", position);
                 Intent intent = new Intent();
                 intent.putExtras(bundle);
                 setResult(Activity.RESULT_OK, intent);
@@ -87,4 +63,7 @@ public class ReceiveDebtActivity extends Activity {
 
     }
 
+    @Override
+    public void onBackPressed() {
+    }
 }

@@ -1,39 +1,40 @@
 package com.group2.team.project2.adapter;
 
 import android.app.Activity;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
 import com.group2.team.project2.R;
-import com.group2.team.project2.object.ReceiveDebt;
 
-/**
- * Created by q on 2017-01-03.
- */
+import java.util.ArrayList;
 
 public class detailReceiveAdapter extends BaseAdapter implements ListAdapter {
 
     private final Activity activity;
-    private final ReceiveDebt debt;
+    private final String amount;
+    private final ArrayList<String> names;
+    private final boolean[] payed;
 
-
-    public detailReceiveAdapter(Activity activity, ReceiveDebt debt) {
+    public detailReceiveAdapter(Activity activity, String amount, ArrayList<String> names, boolean[] payed) {
         assert activity != null;
 
         this.activity = activity;
-        this.debt = debt;
+        this.amount = amount;
+        this.names = names;
+        this.payed = payed;
+    }
+
+    public boolean[] getPayed() {
+        return payed;
     }
 
     @Override
     public int getCount() {
-        return debt.getEmails().size();
+        return names.size();
     }
 
     @Override
@@ -47,7 +48,7 @@ public class detailReceiveAdapter extends BaseAdapter implements ListAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
         if (convertView == null)
             convertView = activity.getLayoutInflater().inflate(R.layout.activity_receive_debt, null);
 
@@ -55,9 +56,8 @@ public class detailReceiveAdapter extends BaseAdapter implements ListAdapter {
         TextView receive_amount = (TextView) convertView.findViewById(R.id.receive_textView_amount);
         final CheckBox receive_check = (CheckBox) convertView.findViewById(R.id.payed_checkbox);
 
-        String name = debt.getNames().get(position);
-        String amount = debt.getAmount();
-        boolean check = debt.getPayed()[position];
+        String name = names.get(position);
+        boolean check = payed[position];
 
         receive_name.setText(name);
         receive_amount.setText(amount);
@@ -69,8 +69,8 @@ public class detailReceiveAdapter extends BaseAdapter implements ListAdapter {
             @Override
             public void onClick(View arg0) {
                 final boolean isChecked = receive_check.isChecked();
-                if (isChecked){
-                    debt.setPayed((int) receive_check.getTag(), true);
+                if (isChecked) {
+                    payed[position] = true;
                     receive_check.setChecked(true);
                     receive_check.setEnabled(false);
                 }

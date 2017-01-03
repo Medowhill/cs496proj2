@@ -52,7 +52,6 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
                     debts.add(0, debt);
                     payedStart++;
                 }
-
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -73,18 +72,12 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
     public long getItemId(int position) {
         return position;
     }
-    public void update(ReceiveDebt debt) {
-        int i = 0;
-        for (ReceiveDebt debt1 : debts) {
-            if (debt1.getName().equals(debt.getName()) && debt1.getAccount().equals(debt.getAccount())
-                    && debt1.getAmount().equals(debt.getAmount()) && debt1.getTime().equals(debt.getTime())) {
-                for (i = 0; i < debt.getPayed().length; i++)
-                    debt1.setPayed(i, debt.getPayed()[i]);
-                break;
-            }
-        }
+
+    public void update(int position, boolean[] payed) {
         boolean allpayed = true;
-        debt = debts.get(i - 1);
+        ReceiveDebt debt = debts.get(position);
+        for (int i = 0; i < payed.length; i++)
+            debt.setPayed(i, payed[i]);
         for (int j = 0; j < debt.getPayed().length; j++) {
             if (!debt.getPayed()[j]) {
                 allpayed = false;
@@ -103,6 +96,7 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
                 debts.add(temp, debt);
             }
         }
+
         notifyDataSetChanged();
     }
 

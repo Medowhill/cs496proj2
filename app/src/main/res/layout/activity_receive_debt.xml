@@ -10,19 +10,23 @@
 
     <TextView
         android:id="@+id/receive_textView_name"
-        android:layout_width="100dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1" />
+        android:layout_weight="1"
+        android:textSize="@dimen/receive_textSize" />
 
     <TextView
         android:id="@+id/receive_textView_amount"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content" />
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textSize="@dimen/receive_textSize" />
 
-    <CheckBox android:id="@+id/payed_checkbox"
+    <CheckBox
+        android:id="@+id/payed_checkbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:onClick="onCheckboxClicked"
-        android:enabled="true"/>
+        android:enabled="true"
+        android:onClick="onCheckboxClicked" />
 
 </LinearLayout>

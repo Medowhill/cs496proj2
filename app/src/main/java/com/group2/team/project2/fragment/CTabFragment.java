@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
@@ -31,16 +32,16 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.facebook.AccessToken;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.group2.team.project2.EventBus;
 import com.group2.team.project2.R;
 import com.group2.team.project2.ReceiveDebtActivity;
 import com.group2.team.project2.adapter.payViewAdapter;
 import com.group2.team.project2.adapter.receiveViewAdapter;
+import com.group2.team.project2.event.CResultEvent;
 import com.group2.team.project2.object.PayDebt;
 import com.group2.team.project2.object.ReceiveDebt;
+import com.squareup.otto.Subscribe;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -59,6 +60,8 @@ import java.util.Calendar;
 
 public class CTabFragment extends Fragment {
 
+    private static final int REQUEST_DETAIL = 100;
+
     private FloatingActionButton fab;
 
     private EditText editTextPerson, editTextTotal;
@@ -66,11 +69,11 @@ public class CTabFragment extends Fragment {
     private LinearLayout layout;
 
     private static ArrayList<Integer> notifications = new ArrayList<>();
+    private static String mEmail, mName;
     private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
     private ArrayList<Thread> threads = new ArrayList<>();
     private ArrayList<ReceiveDebt> receiveDebts = new ArrayList<>();
     private ArrayList<String> sendEmails = new ArrayList<>(), mEmails = new ArrayList<>(), mNames = new ArrayList<>();
-    private String mEmail, mName;
     private IntentFilter filter;
     private ListView payView;
     private ListView receiveView;
@@ -152,7 +155,7 @@ public class CTabFragment extends Fragment {
         }
     };
 
-    private Handler loginHandler = new Handler() {
+    private Handler dataHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
             try {
@@ -177,25 +180,7 @@ public class CTabFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        AccessToken token = AccessToken.getCurrentAccessToken();
-        GraphRequest graphRequest = GraphRequest.newMeRequest(token, new GraphRequest.GraphJSONObjectCallback() {
-            @Override
-            public void onCompleted(JSONObject jsonObject, GraphResponse graphResponse) {
-                try {
-                    mName = jsonObject.getString("name");
-                    mEmail = jsonObject.getString("email");
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                sendTokenToServer();
-                solveLogin();
-            }
-        });
-        Bundle param = new Bundle();
-        param.putString("fields", "email,name");
-        graphRequest.setParameters(param);
-        graphRequest.executeAsync();
-
+        EventBus.getInstance().register(this);
         filter = new IntentFilter();
         filter.addAction(getString(R.string.intent_action_broadcast_push));
         filter.setPriority(1);
@@ -204,6 +189,8 @@ public class CTabFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+
+        getDataFromServer();
 
         NotificationManager notificationManager = (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
         for (int i = 0; i < notifications.size(); i++)
@@ -328,14 +315,12 @@ public class CTabFragment extends Fragment {
                                 else {
                                     ArrayList<String> emails = new ArrayList<>(), names = new ArrayList<>();
                                     emails.addAll(sendEmails);
-                                    boolean[] payed = new boolean[sendEmails.size()];
-                                    for (String email : emails) {
+                                    for (String email : emails)
                                         names.add(mNames.get(mEmails.indexOf(email)));
-                                        payed[mEmails.indexOf(email)] = false;
-                                    }
+
                                     addDebt(new ReceiveDebt(mName, getResources().getStringArray(R.array.c_add_banks)[spinner.getSelectedItemPosition()]
                                             + " " + editTextAccount.getText().toString(), editTextPerson.getText().toString(),
-                                            format.format(Calendar.getInstance().getTime()), emails, names, payed, false));
+                                            format.format(Calendar.getInstance().getTime()), emails, names));
                                     alertDialog.dismiss();
                                 }
                             }
@@ -348,10 +333,35 @@ public class CTabFragment extends Fragment {
         return rootView;
     }
 
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        EventBus.getInstance().unregister(this);
+    }
+
+    @SuppressWarnings("unused")
+    @Subscribe
+    public void onActivityResultEvent(@NonNull CResultEvent event) {
+        onActivityResult(event.getRequestCode(), event.getResultCode(), event.getData());
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.i("cs496", requestCode + ", " + resultCode);
+        switch (requestCode) {
+            case REQUEST_DETAIL:
+                if (resultCode == Activity.RESULT_OK) {
+                    int position = data.getIntExtra("position", -1);
+                    boolean[] payed = data.getBooleanArrayExtra("payed");
+                    receiveAdapter.update(position, payed);
+                }
+                break;
+        }
+    }
+
     public void viewPay(JSONArray payArray) throws JSONException {
         //JSONArray 서버에서 받아옴 (name, account, amount, time)
         payAdapter = new payViewAdapter(getActivity(), payArray, mEmail);
-        Log.i("cs496test", payAdapter.getCount() + "");
         payView.setAdapter(payAdapter);
     }
 
@@ -360,40 +370,25 @@ public class CTabFragment extends Fragment {
         receiveView.setAdapter(receiveAdapter);
     }
 
-
     private class receiveViewItemClickListener implements AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             Log.d("Clicked", "Clicked");
             ReceiveDebt receiveDebt = receiveAdapter.getItem(position);
             Intent intent = new Intent(getContext(), ReceiveDebtActivity.class);
-            intent.putExtra("name", receiveDebt.getName());
-            intent.putExtra("account", receiveDebt.getAccount());
-            intent.putExtra("time", receiveDebt.getTime());
             intent.putExtra("amount", receiveDebt.getAmount());
             intent.putExtra("names", receiveDebt.getNames());
-            intent.putExtra("emails", receiveDebt.getEmails());
             intent.putExtra("payed", receiveDebt.getPayed());
             intent.putExtra("allPayed", receiveDebt.getAllPayed());
-            startActivityForResult(intent, 111);
-        }
-    }
-
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d("MKLOG", "ActivityResult");
-        super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK) {
-            Log.d("Came to Activity Result", "Im here");
-            Bundle res = data.getExtras();
-            String name = res.getString("name");
-            String account = res.getString("account");
-            String amount = res.getString("amount");
-            String time = res.getString("time");
-            boolean[] getpayed = res.getBooleanArray("getpayed");
-            ReceiveDebt debt = new ReceiveDebt(name, account, amount, time, res.getStringArrayList("emails"), res.getStringArrayList("names"), getpayed, false);
-            receiveAdapter.update(debt);
+            intent.putExtra("position", position);
+            startActivityForResult(intent, REQUEST_DETAIL);
+            /*
+            새로운 receive_detail_item 이랑 adapter 만들고,
+            Payed click 하면 1) push message 보내고, 가장 밑으로 보내기(List 중에). 추가해야됨
+             */
+//            OK 눌러서 dialog 끄면:
+//                receiveAdapter.update(receive);
+//            payAdapter.notifyDataSetChanged(); <-- 이거 adapter쪽으로 옮겨야함
         }
     }
 
@@ -621,14 +616,12 @@ public class CTabFragment extends Fragment {
         if (pay.isNew()) {
             pay.setNew(false);
             payAdapter.add(0, pay);
-            //추가된거 보여주기!!! 어떻게?
-            // 여기선 JSON을 만들어서 추가해줘야함
         } else {
             payAdapter.update(pay);
         }
     }
 
-    private void solveLogin() {
+    private void getDataFromServer() {
         new Thread() {
             @Override
             public void run() {
@@ -660,7 +653,7 @@ public class CTabFragment extends Fragment {
 
                     Message message = new Message();
                     message.obj = new String(arr);
-                    loginHandler.sendMessage(message);
+                    dataHandler.sendMessage(message);
                 } catch (MalformedURLException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
@@ -669,5 +662,10 @@ public class CTabFragment extends Fragment {
                 threads.remove(this);
             }
         }.start();
+    }
+
+    public static void setUser(String name, String email) {
+        mName = name;
+        mEmail = email;
     }
 }

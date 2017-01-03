@@ -29,4 +29,6 @@
     <dimen name="c_debt_detail_textsize">13sp</dimen>
     <dimen name="c_debt_amount_textsize">23sp</dimen>
     <dimen name="c_vertical_margin">8dp</dimen>
+
+    <dimen name="receive_textSize">17sp</dimen>
 </resources>

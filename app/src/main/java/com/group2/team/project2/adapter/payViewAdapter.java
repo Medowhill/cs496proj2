@@ -55,22 +55,22 @@ public class payViewAdapter extends BaseAdapter implements ListAdapter {
     }
 
     public void update(PayDebt debt) {
-        for (PayDebt debt1 : debts) {
+        int j;
+        PayDebt debtUpdated = null;
+        for (int i = 0; i < debts.size(); i++) {
+            PayDebt debt1 = debts.get(i);
             if (debt1.getEmail().equals(debt.getEmail()) && debt1.getAccount().equals(debt.getAccount())
                     && debt1.getAmount().equals(debt.getAmount()) && debt1.getTime().equals(debt.getTime())) {
                 debt1.setNew(true);
+                debtUpdated = debts.remove(i);
                 break;
             }
         }
-        if (debts.size() >1){
-            debts.remove(debt);
-            PayDebt tempDebt = debts.get(0);
-            int temp=0;
-            while (!tempDebt.isNew() && temp < debts.size()){
-                temp++;
-            }
-            debts.add(temp, debt);
-        }
+        for (j = 0; j < debts.size(); j++)
+            if (debts.get(j).isNew())
+                break;
+        debts.add(j, debtUpdated);
+
         notifyDataSetChanged();
     }
 
