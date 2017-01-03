@@ -61,8 +61,7 @@ public class detailReceiveAdapter extends BaseAdapter implements ListAdapter {
         boolean check = payed[position];
 
         receive_name.setText(name);
-        receive_amount.setText(amount);
-        receive_check.setTag(position);
+        receive_amount.setText(amount+"원");
         receive_check.setChecked(check);
         receive_check.setEnabled(!check);
 

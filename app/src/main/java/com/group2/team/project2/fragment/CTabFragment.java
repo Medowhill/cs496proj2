@@ -389,7 +389,12 @@ public class CTabFragment extends Fragment {
                             solvePayed(receiveDebt);
                         }
                     })
-                    .setNegativeButton(R.string.c_receive_negative, null)
+                    .setNegativeButton(R.string.c_receive_negative, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.dismiss();
+                        }
+                    })
                     .show();
         }
     }

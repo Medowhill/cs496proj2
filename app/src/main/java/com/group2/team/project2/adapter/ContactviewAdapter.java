@@ -25,7 +25,7 @@ import java.util.ArrayList;
 public class ContactviewAdapter extends BaseAdapter implements ListAdapter {
 
     private final Activity activity;
-    private final JSONArray jsonArray;
+    private JSONArray jsonArray;
 
     public ContactviewAdapter(Activity activity, JSONArray jsonArray) {
         assert activity != null;
@@ -55,6 +55,10 @@ public class ContactviewAdapter extends BaseAdapter implements ListAdapter {
     public long getItemId(int position) {
         JSONObject jsonObject = getItem(position);
         return jsonObject.optLong("id");
+    }
+
+    public void setJsonArray(JSONArray jsonArray) {
+        this.jsonArray = jsonArray;
     }
 
     @Override

@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -15,11 +16,14 @@ import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -99,8 +103,8 @@ public class ATabFragment extends Fragment {
         clearButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                m_adapter = new ContactviewAdapter(getActivity(), null);
-                listView.setAdapter(m_adapter);
+                m_adapter.setJsonArray(contactArray = new JSONArray());
+                m_adapter.notifyDataSetChanged();
             }
         });
 
@@ -138,13 +142,33 @@ public class ATabFragment extends Fragment {
 
     private class ListViewItemClickListener implements AdapterView.OnItemClickListener {
         @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
             AlertDialog.Builder alertDlg = new AlertDialog.Builder(view.getContext());
 
-            alertDlg.setNegativeButton("할로~", new DialogInterface.OnClickListener() {
+
+            alertDlg.setNegativeButton("문자", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    dialog.dismiss();  // AlertDialog를 닫는다.
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    try {
+                        intent.setData(Uri.parse("sms:"+contactArray.getJSONObject(position).getString("mobile_number")));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    startActivity(intent);
+                }
+            });
+
+            alertDlg.setNeutralButton("전화", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    Intent intent = new Intent(Intent.ACTION_DIAL);
+                    try {
+                        intent.setData(Uri.parse("tel:"+contactArray.getJSONObject(position).getString("mobile_number")));
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                    startActivity(intent);
                 }
             });
 
