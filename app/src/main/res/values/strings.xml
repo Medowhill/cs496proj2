@@ -16,6 +16,7 @@
     <string name="c_add_person">1인당 금액</string>
     <string name="c_add_email_hint">Enter email</string>
     <string name="c_add_account_hint">Account number</string>
+    <string name="c_notification_please">빨리 돈 좀 보내거라!!!</string>
     <string name="c_notification_new">보내야 할 돈!</string>
     <string name="c_notification_old">송금 확인 됨!</string>
     <string name="c_notification_text_new">보낼 것을 부탁함</string>
@@ -25,4 +26,5 @@
     <string name="c_add_toast_noaccount">You do not enter the account.</string>
     <string name="c_receive_positive">Submit</string>
     <string name="c_receive_negative">Cancel</string>
+    <string name="c_receive_please">독촉하기</string>
 </resources>

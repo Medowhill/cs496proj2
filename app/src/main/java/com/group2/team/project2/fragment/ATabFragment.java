@@ -278,9 +278,6 @@ public class ATabFragment extends Fragment {
                     urlConnection.setRequestProperty("tab", "A");
                     urlConnection.setRequestProperty("email", ownEmail);
 
-                    String response = "";
-                    String line;
-                    Log.d("hello", "sofar");
                     InputStream is = urlConnection.getInputStream();
                     ByteArrayOutputStream out = new ByteArrayOutputStream();
 
@@ -293,9 +290,7 @@ public class ATabFragment extends Fragment {
                     is.close();
 
                     JSONObject array = new JSONObject(new String(arr));
-                    Log.d("ARRAY", array.toString());
                     contactArray = array.getJSONArray("contact");
-                    Log.d("FINARRAY", contactArray.toString());
 
                     handler.post(new Runnable() {
                         public void run() {

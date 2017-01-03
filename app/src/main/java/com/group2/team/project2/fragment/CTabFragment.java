@@ -365,6 +365,15 @@ public class CTabFragment extends Fragment {
             final ReceiveDebt receiveDebt = receiveAdapter.getItem(position);
             View v = getActivity().getLayoutInflater().inflate(R.layout.dialog_receive, null);
             ListView list = (ListView) v.findViewById(R.id.receiveDetailView);
+            Button button = (Button) v.findViewById(R.id.c_receive_button);
+            if (receiveDebt.getAllPayed())
+                button.setEnabled(false);
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    sendPleaseRequest(receiveDebt.getTimeStamp());
+                }
+            });
             final detailReceiveAdapter adapter = new detailReceiveAdapter(receiveDebt.getAmount(), receiveDebt.getNames(), receiveDebt.getPayed());
             list.setAdapter(adapter);
 
@@ -373,6 +382,9 @@ public class CTabFragment extends Fragment {
                     .setPositiveButton(R.string.c_receive_positive, new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
+                            boolean[] nPayed = adapter.getPayed();
+                            for (int i = 0; i < nPayed.length; i++)
+                                receiveDebt.setPayed(i, nPayed[i]);
                             receiveAdapter.update(position);
                             solvePayed(receiveDebt);
                         }
@@ -590,7 +602,6 @@ public class CTabFragment extends Fragment {
             pay.setNew(false);
             payAdapter.add(0, pay);
         } else {
-            Log.i("cs496test", "update");
             payAdapter.update(pay);
         }
     }
@@ -675,6 +686,39 @@ public class CTabFragment extends Fragment {
                     outputStream.write(object.toString().getBytes());
                     outputStream.flush();
                     outputStream.close();
+
+                    InputStream inputStream = connection.getInputStream();
+                    byte[] arr = new byte[inputStream.available()];
+                    inputStream.read(arr);
+                    inputStream.close();
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                threads.remove(this);
+            }
+        }.start();
+    }
+
+    private void sendPleaseRequest(final String timestamp) {
+        new Thread() {
+            @Override
+            public void run() {
+                threads.add(this);
+                try {
+                    URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+                    connection.setRequestMethod("GET");
+                    connection.setDoOutput(false);
+                    connection.setDoInput(true);
+                    connection.setUseCaches(false);
+                    connection.setDefaultUseCaches(false);
+                    connection.setRequestProperty("tab", "C");
+                    connection.setRequestProperty("type", "please");
+                    connection.setRequestProperty("email", mEmail);
+                    connection.setRequestProperty("timestamp", timestamp);
 
                     InputStream inputStream = connection.getInputStream();
                     byte[] arr = new byte[inputStream.available()];

@@ -9,7 +9,7 @@ import android.media.RingtoneManager;
 import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 
-import com.group2.team.project2.MainActivity;
+import com.group2.team.project2.LoginActivity;
 import com.group2.team.project2.R;
 import com.group2.team.project2.fragment.CTabFragment;
 
@@ -23,8 +23,8 @@ public class PushBroadcastReceiver extends BroadcastReceiver {
         String name = intent.getStringExtra("name"), amount = intent.getStringExtra("amount"), account = intent.getStringExtra("account");
         boolean isNew = intent.getBooleanExtra("isNew", true);
 
-        Intent in = new Intent(context, MainActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        Intent in = new Intent(context, LoginActivity.class);
+        in.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(context, REQUEST_ACTIVITY, in, PendingIntent.FLAG_ONE_SHOT);
 
         Uri defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);

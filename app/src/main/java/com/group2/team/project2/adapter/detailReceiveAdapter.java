@@ -17,12 +17,18 @@ public class detailReceiveAdapter extends BaseAdapter implements ListAdapter {
 
     private final String amount;
     private final ArrayList<String> names;
-    private final boolean[] payed;
+    private boolean[] payed;
 
     public detailReceiveAdapter(String amount, ArrayList<String> names, boolean[] payed) {
         this.amount = amount;
         this.names = names;
-        this.payed = payed;
+        this.payed = new boolean[payed.length];
+        for (int i = 0; i < payed.length; i++)
+            this.payed[i] = payed[i];
+    }
+
+    public boolean[] getPayed() {
+        return payed;
     }
 
     @Override
