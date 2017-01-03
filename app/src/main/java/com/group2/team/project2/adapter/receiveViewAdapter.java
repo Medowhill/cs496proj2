@@ -1,7 +1,6 @@
 package com.group2.team.project2.adapter;
 
 import android.app.Activity;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -17,10 +16,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-
-/**
- * Created by q on 2017-01-02.
- */
 
 public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
 
@@ -51,7 +46,6 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
                 }
 
                 ReceiveDebt debt = new ReceiveDebt(pay_json.getString("name"), pay_json.getString("account"), pay_json.getString("amount"), pay_json.getString("time"), emailList, nameList, payedList, allpayed);
-                Log.d("Allpayed TEST", String.valueOf(debt.getAllPayed()));
                 if (debt.getAllPayed()) {
                     debts.add(payedStart, debt);
                 } else {
@@ -79,9 +73,9 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
         return position;
     }
 
-    public void update(ReceiveDebt debt){
+    public void update(ReceiveDebt debt) {
         int i = 0;
-        for (ReceiveDebt debt1: debts){
+        for (ReceiveDebt debt1 : debts) {
             if (debt1.getName().equals(debt.getName()) && debt1.getAccount().equals(debt.getAccount())
                     && debt1.getAmount().equals(debt.getAmount()) && debt1.getTime().equals(debt.getTime())) {
                 for (i = 0; i < debt.getPayed().length; i++)
@@ -90,14 +84,14 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
             }
         }
         boolean allpayed = true;
-        debt = debts.get(i-1);
-        for (int j=0; j<debt.getPayed().length; j++){
+        debt = debts.get(i - 1);
+        for (int j = 0; j < debt.getPayed().length; j++) {
             if (!debt.getPayed()[j]) {
                 allpayed = false;
                 break;
             }
         }
-        if (allpayed){
+        if (allpayed) {
             debt.setAllpayed();
             debts.remove(debt);
             debts.add(debts.size(), debt);
@@ -127,8 +121,8 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
             mainName = debt.getNames().get(i);
             i++;
         }
-        for (i = 0; i< debt.getPayed().length; i++){
-            if (debt.getPayed()[i]){
+        for (i = 0; i < debt.getPayed().length; i++) {
+            if (debt.getPayed()[i]) {
                 payedCount--;
             }
         }
@@ -140,10 +134,10 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
         } else {
             receive_name.setText(String.format("%s 외 %d", mainName, payedCount - 1));
         }
-        receive_amount.setText(debt.getAmount()+"원");
+        receive_amount.setText(debt.getAmount() + "원");
         receive_time.setText(debt.getTime());
 
-        if (debt.getAllPayed()){
+        if (debt.getAllPayed()) {
             receive_background.setVisibility(View.VISIBLE);
             notifyDataSetChanged();
         }
