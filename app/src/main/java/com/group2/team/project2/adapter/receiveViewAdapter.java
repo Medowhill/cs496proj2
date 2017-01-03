@@ -58,6 +58,7 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
                     debts.add(0, debt);
                     payedStart++;
                 }
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -99,11 +100,16 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
         }
         if (allpayed){
             debt.setAllpayed();
-            debts.remove(debt);
-            debts.add(debts.size(), debt);
+            if (debts.size() > 1){
+                debts.remove(debt);
+                ReceiveDebt tempDebt = debts.get(0);
+                int temp=0;
+                while (!tempDebt.getAllPayed() && temp < debts.size()){
+                    temp++;
+                }
+                debts.add(temp, debt);
+            }
         }
-
-
         notifyDataSetChanged();
     }
 

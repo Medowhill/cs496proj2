@@ -380,13 +380,6 @@ public class CTabFragment extends Fragment {
             intent.putExtra("payed", receiveDebt.getPayed());
             intent.putExtra("allPayed", receiveDebt.getAllPayed());
             startActivityForResult(intent, 111);
-            /*
-            새로운 receive_detail_item 이랑 adapter 만들고,
-            Payed click 하면 1) push message 보내고, 가장 밑으로 보내기(List 중에). 추가해야됨
-             */
-//            OK 눌러서 dialog 끄면:
-//                receiveAdapter.update(receive);
-//            payAdapter.notifyDataSetChanged(); <-- 이거 adapter쪽으로 옮겨야함
         }
     }
 
@@ -553,6 +546,16 @@ public class CTabFragment extends Fragment {
 
     private void receiveDebt(ReceiveDebt debt) {
         final JSONObject object = new JSONObject();
+        try {
+            object.put("account", debt.getAccount());
+            object.put("amount", debt.getAmount());
+            object.put("time", debt.getTime());
+            object.put("name", debt.getName());
+            JSONArray array = new JSONArray();
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     private void addDebt(ReceiveDebt debt) {

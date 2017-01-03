@@ -76,7 +76,6 @@ public class detailReceiveAdapter extends BaseAdapter implements ListAdapter {
                 }
             }
         });
-
         return convertView;
     }
 }

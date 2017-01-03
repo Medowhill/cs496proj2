@@ -62,6 +62,15 @@ public class payViewAdapter extends BaseAdapter implements ListAdapter {
                 break;
             }
         }
+        if (debts.size() >1){
+            debts.remove(debt);
+            PayDebt tempDebt = debts.get(0);
+            int temp=0;
+            while (!tempDebt.isNew() && temp < debts.size()){
+                temp++;
+            }
+            debts.add(temp, debt);
+        }
         notifyDataSetChanged();
     }
 

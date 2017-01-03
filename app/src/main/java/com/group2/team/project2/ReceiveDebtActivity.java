@@ -33,15 +33,15 @@ public class ReceiveDebtActivity extends Activity {
         ArrayList<String> names = getIntent().getStringArrayListExtra("names");
         ArrayList<String> emails = getIntent().getStringArrayListExtra("emails");
         boolean[] payed = getIntent().getBooleanArrayExtra("payed");
-        boolean allPayed = getIntent().getBooleanExtra("allPayed", false);
+        boolean allPayed = getIntent().getBooleanExtra("allpayed", false);
 
         debt = new ReceiveDebt(name, account, amount, time, emails, names, payed, allPayed);
 
         detailReceiveAdapter adapter = new detailReceiveAdapter(this, debt);
         list.setAdapter(adapter);
 
-        Button receive_button = (Button) findViewById(R.id.receive_button);
-        receive_button.setOnClickListener(new View.OnClickListener() {
+        Button receive_ok_button = (Button) findViewById(R.id.receive_ok_button);
+        receive_ok_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 boolean allpayed = true;
@@ -71,6 +71,15 @@ public class ReceiveDebtActivity extends Activity {
                 Intent intent = new Intent();
                 intent.putExtras(bundle);
                 setResult(Activity.RESULT_OK, intent);
+                finish();
+            }
+        });
+
+        Button receive_cancel_button = (Button) findViewById(R.id.receive_cancel_button);
+        receive_cancel_button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setResult(Activity.RESULT_CANCELED);
                 finish();
             }
         });
