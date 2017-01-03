@@ -64,7 +64,8 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity android:name=".ReceiveDebtActivity"></activity>
+        <activity android:name=".ReceiveDebtActivity"
+            android:theme="@android:style/Theme.Dialog"></activity>
     </application>
 
 </manifest>

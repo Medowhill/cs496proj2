@@ -60,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         EventBus.getInstance().post(BResultEvent.create(requestCode, resultCode, data));
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     @Override

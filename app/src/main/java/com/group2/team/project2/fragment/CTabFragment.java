@@ -1,5 +1,6 @@
 package com.group2.team.project2.fragment;
 
+import android.app.Activity;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -12,6 +13,7 @@ import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -55,6 +57,8 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+
+import static android.app.Activity.RESULT_OK;
 
 public class CTabFragment extends Fragment {
 
@@ -217,7 +221,8 @@ public class CTabFragment extends Fragment {
         payView = (ListView) rootView.findViewById(R.id.payView);
         receiveView = (ListView) rootView.findViewById(R.id.receiveView);
         fab = (FloatingActionButton) rootView.findViewById(R.id.c_fab_add);
-        receiveView.setOnItemClickListener(new CTabFragment.receiveViewItemClickListener());
+        Log.d("TEST", "CREATED!!!!");
+        receiveView.setOnItemClickListener(new receiveViewItemClickListener());
 
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -358,17 +363,23 @@ public class CTabFragment extends Fragment {
         receiveView.setAdapter(receiveAdapter);
     }
 
+
+
     private class receiveViewItemClickListener implements AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            Log.d("Clicked", "Clicked");
             ReceiveDebt receiveDebt = receiveAdapter.getItem(position);
             Intent intent = new Intent(getContext(), ReceiveDebtActivity.class);
+            intent.putExtra("name", receiveDebt.getName());
             intent.putExtra("account", receiveDebt.getAccount());
             intent.putExtra("time", receiveDebt.getTime());
             intent.putExtra("amount", receiveDebt.getAmount());
             intent.putExtra("names", receiveDebt.getNames());
             intent.putExtra("emails", receiveDebt.getEmails());
-            startActivity(intent);
+            intent.putExtra("payed", receiveDebt.getPayed());
+            intent.putExtra("allPayed", receiveDebt.getAllPayed());
+            startActivityForResult(intent, 111);
             /*
             새로운 receive_detail_item 이랑 adapter 만들고,
             Payed click 하면 1) push message 보내고, 가장 밑으로 보내기(List 중에). 추가해야됨
@@ -376,6 +387,24 @@ public class CTabFragment extends Fragment {
 //            OK 눌러서 dialog 끄면:
 //                receiveAdapter.update(receive);
 //            payAdapter.notifyDataSetChanged(); <-- 이거 adapter쪽으로 옮겨야함
+        }
+    }
+
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data){
+        Log.d("MKLOG", "ActivityResult");
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK){
+            Log.d("Came to Activity Result", "Im here");
+            Bundle res = data.getExtras();
+            String name = res.getString("name");
+            String account = res.getString("account");
+            String amount = res.getString("amount");
+            String time = res.getString("time");
+            boolean[] getpayed = res.getBooleanArray("getpayed");
+            ReceiveDebt debt = new ReceiveDebt(name, account, amount, time, res.getStringArrayList("emails"), res.getStringArrayList("names"), getpayed, false);
+            receiveAdapter.update(debt);
         }
     }
 

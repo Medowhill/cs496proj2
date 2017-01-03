@@ -1,6 +1,7 @@
 package com.group2.team.project2.adapter;
 
 import android.app.Activity;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
@@ -28,7 +29,6 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
 
     public receiveViewAdapter(Activity activity, JSONArray jsonArray, String email) {
         assert activity != null;
-        assert jsonArray != null;
 
         this.activity = activity;
 
@@ -77,6 +77,18 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
         return position;
     }
 
+    public void update(ReceiveDebt debt){
+        for (ReceiveDebt debt1: debts){
+            if (debt1.getName().equals(debt.getName()) && debt1.getAccount().equals(debt.getAccount())
+                    && debt1.getAmount().equals(debt.getAmount()) && debt1.getTime().equals(debt.getTime())) {
+                for (int i = 0; i < debt.getPayed().length; i++)
+                    debt1.getPayed()[i] = debt.getPayed()[i];
+                break;
+            }
+        }
+    }
+
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         if (convertView == null)
@@ -103,7 +115,6 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
         } else {
             receive_name.setText(String.format("%s 외 %d", mainName, payedCount - 1));
         }
-        receive_name.setText(debt.getName());
         receive_amount.setText(debt.getAmount());
         receive_time.setText(debt.getTime());
 
