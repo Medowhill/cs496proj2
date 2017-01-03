@@ -70,7 +70,7 @@ public class detailReceiveAdapter extends BaseAdapter implements ListAdapter {
             public void onClick(View arg0) {
                 final boolean isChecked = receive_check.isChecked();
                 if (isChecked){
-                    debt.getPayed()[(int) receive_check.getTag()]=true;
+                    debt.setPayed((int) receive_check.getTag(), true);
                     receive_check.setChecked(true);
                     receive_check.setEnabled(false);
                 }

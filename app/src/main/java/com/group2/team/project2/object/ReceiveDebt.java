@@ -24,6 +24,10 @@ public class ReceiveDebt {
         this.allpayed = allpayed;
     }
 
+    public void setPayed(int position, boolean pay) {this.payed[position] = pay;}
+
+    public void setAllpayed() {this.allpayed=true;}
+
     public String getAccount() {
         return account;
     }

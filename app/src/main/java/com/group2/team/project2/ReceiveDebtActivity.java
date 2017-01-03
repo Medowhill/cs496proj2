@@ -44,6 +44,13 @@ public class ReceiveDebtActivity extends Activity {
         receive_button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                boolean allpayed = true;
+                for (int i=0; i < debt.getPayed().length; i++){
+                    if (!debt.getPayed()[0])
+                        allpayed = false;
+                }
+                if (allpayed)
+                    debt.setAllpayed();
                 Log.d("Activity TEST", debt.getName());
                 Log.d("Activity TEST", debt.getAccount());
                 Log.d("Activity TEST", debt.getTime());

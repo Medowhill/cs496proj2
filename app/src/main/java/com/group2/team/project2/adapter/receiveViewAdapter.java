@@ -29,6 +29,7 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
 
     public receiveViewAdapter(Activity activity, JSONArray jsonArray, String email) {
         assert activity != null;
+        assert jsonArray != null;
 
         this.activity = activity;
 
@@ -50,6 +51,7 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
                 }
 
                 ReceiveDebt debt = new ReceiveDebt(pay_json.getString("name"), pay_json.getString("account"), pay_json.getString("amount"), pay_json.getString("time"), emailList, nameList, payedList, allpayed);
+                Log.d("Allpayed TEST", String.valueOf(debt.getAllPayed()));
                 if (debt.getAllPayed()) {
                     debts.add(payedStart, debt);
                 } else {
@@ -78,14 +80,31 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
     }
 
     public void update(ReceiveDebt debt){
+        int i = 0;
         for (ReceiveDebt debt1: debts){
             if (debt1.getName().equals(debt.getName()) && debt1.getAccount().equals(debt.getAccount())
                     && debt1.getAmount().equals(debt.getAmount()) && debt1.getTime().equals(debt.getTime())) {
-                for (int i = 0; i < debt.getPayed().length; i++)
-                    debt1.getPayed()[i] = debt.getPayed()[i];
+                for (i = 0; i < debt.getPayed().length; i++)
+                    debt1.setPayed(i, debt.getPayed()[i]);
                 break;
             }
         }
+        boolean allpayed = true;
+        debt = debts.get(i-1);
+        for (int j=0; j<debt.getPayed().length; j++){
+            if (!debt.getPayed()[j]) {
+                allpayed = false;
+                break;
+            }
+        }
+        if (allpayed){
+            debt.setAllpayed();
+            debts.remove(debt);
+            debts.add(debts.size(), debt);
+        }
+
+
+        notifyDataSetChanged();
     }
 
 
@@ -99,29 +118,36 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
         TextView receive_time = (TextView) convertView.findViewById(R.id.receive_time);
         ImageView receive_background = (ImageView) convertView.findViewById(R.id.receive_background);
 
-
         ReceiveDebt debt = debts.get(position);
-        int payedCount = debt.getEmails().size();
+        int payedCount = debt.getPayed().length;
         String mainName = debt.getNames().get(0);
         int i = 0;
-        while (debt.getPayed()[i]) {
+
+        while (i < debt.getPayed().length && debt.getPayed()[i]) {
             mainName = debt.getNames().get(i);
-            payedCount--;
+            i++;
+        }
+        for (i = 0; i< debt.getPayed().length; i++){
+            if (debt.getPayed()[i]){
+                payedCount--;
+            }
         }
         if (payedCount == 0) {
             receive_name.setText("All Payed");
+            debt.setAllpayed();
         } else if (payedCount == 1) {
             receive_name.setText(mainName);
         } else {
             receive_name.setText(String.format("%s 외 %d", mainName, payedCount - 1));
         }
-        receive_amount.setText(debt.getAmount());
+        receive_amount.setText(debt.getAmount()+"원");
         receive_time.setText(debt.getTime());
 
-        if (debt.getAllPayed())
+        if (debt.getAllPayed()){
             receive_background.setVisibility(View.VISIBLE);
-        else
-            receive_background.setVisibility(View.INVISIBLE);
+            notifyDataSetChanged();
+        }
+
 
         return convertView;
     }

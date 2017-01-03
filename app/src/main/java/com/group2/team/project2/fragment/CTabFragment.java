@@ -551,6 +551,10 @@ public class CTabFragment extends Fragment {
         }.start();
     }
 
+    private void receiveDebt(ReceiveDebt debt) {
+        final JSONObject object = new JSONObject();
+    }
+
     private void addDebt(ReceiveDebt debt) {
         receiveDebts.add(debt);
         final JSONObject object = new JSONObject();
