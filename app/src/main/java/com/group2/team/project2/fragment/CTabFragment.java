@@ -13,7 +13,6 @@ import android.os.Message;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -57,8 +56,6 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-
-import static android.app.Activity.RESULT_OK;
 
 public class CTabFragment extends Fragment {
 
@@ -162,6 +159,7 @@ public class CTabFragment extends Fragment {
                 JSONObject object = new JSONObject((String) msg.obj);
                 viewPay(object.getJSONArray("pay"));
                 viewReceive(object.getJSONArray("receive"));
+                Log.i("cs496test", "login fin");
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -221,7 +219,6 @@ public class CTabFragment extends Fragment {
         payView = (ListView) rootView.findViewById(R.id.payView);
         receiveView = (ListView) rootView.findViewById(R.id.receiveView);
         fab = (FloatingActionButton) rootView.findViewById(R.id.c_fab_add);
-        Log.d("TEST", "CREATED!!!!");
         receiveView.setOnItemClickListener(new receiveViewItemClickListener());
 
         fab.setOnClickListener(new View.OnClickListener() {
@@ -364,7 +361,6 @@ public class CTabFragment extends Fragment {
     }
 
 
-
     private class receiveViewItemClickListener implements AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -385,10 +381,10 @@ public class CTabFragment extends Fragment {
 
 
     @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data){
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d("MKLOG", "ActivityResult");
         super.onActivityResult(requestCode, resultCode, data);
-        if (resultCode == Activity.RESULT_OK){
+        if (resultCode == Activity.RESULT_OK) {
             Log.d("Came to Activity Result", "Im here");
             Bundle res = data.getExtras();
             String name = res.getString("name");
