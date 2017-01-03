@@ -116,14 +116,15 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
 
         ReceiveDebt debt = debts.get(position);
         int payedCount = debt.getPayed().length;
-        String mainName = debt.getNames().get(0);
-        int i = 0;
 
-        while (i < debt.getPayed().length && debt.getPayed()[i]) {
-            mainName = debt.getNames().get(i);
-            i++;
+        int index = -1;
+        for (int i = 0; i < debt.getPayed().length; i++) {
+            if (!debt.getPayed()[i]) {
+                index = i;
+                break;
+            }
         }
-        for (i = 0; i < debt.getPayed().length; i++) {
+        for (int i = 0; i < debt.getPayed().length; i++) {
             if (debt.getPayed()[i]) {
                 payedCount--;
             }
@@ -132,9 +133,9 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
             receive_name.setText("All Payed");
             debt.setAllpayed();
         } else if (payedCount == 1) {
-            receive_name.setText(mainName);
+            receive_name.setText(debt.getNames().get(index));
         } else {
-            receive_name.setText(String.format("%s 외 %d", mainName, payedCount - 1));
+            receive_name.setText(String.format("%s 외 %d", debt.getNames().get(index), payedCount - 1));
         }
         receive_amount.setText(debt.getAmount() + "원");
         receive_time.setText(debt.getTime());
