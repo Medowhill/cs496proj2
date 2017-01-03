@@ -18,9 +18,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -43,9 +41,6 @@ import java.net.URL;
 
 public class ATabFragment extends Fragment {
 
-    private EditText etMessage;
-    private TextView tvRecvData;
-    private String url = "http://52.78.240.193:3000";
     //52.78.240.193
     private String ownID;
     private static final int PERMISSIONS_REQUEST_READ_CONTACTS = 100;
@@ -167,7 +162,6 @@ public class ATabFragment extends Fragment {
         }
     }
 
-
     // Contact 가져올 때 첫번째로 부르는 함수
     private JSONArray queryContact() throws JSONException {
         JSONArray phoneArray = new JSONArray();
@@ -253,7 +247,7 @@ public class ATabFragment extends Fragment {
         new Thread() {
             public void run() {
                 try {
-                    URL u = new URL(url);
+                    URL u = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
                     HttpURLConnection urlConnection = (HttpURLConnection) u.openConnection();
                     //urlConnection.setConnectTimeout(3 * 1000);
                     //urlConnection.setReadTimeout(3 * 1000);
@@ -324,6 +318,9 @@ public class ATabFragment extends Fragment {
                 new GraphRequest.Callback() {
                     public void onCompleted(GraphResponse response) {
                         JSONObject obj = response.getJSONObject();
+                        Log.d("RESPONSE", response + "");
+                        Log.d("RESPONSE", obj + "");
+
                         try {
                             JSONArray arr = obj.getJSONArray("data");
                             for (int i = 0; i < arr.length(); i++) {
@@ -364,7 +361,7 @@ public class ATabFragment extends Fragment {
             public void run() {
                 try {
                     // URL클래스의 생성자로 주소를 넘겨준다.
-                    URL u = new URL(url);
+                    URL u = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
                     // 해당 주소의 페이지로 접속을 하고, 단일 HTTP 접속을 하기위해 캐스트한다.
                     HttpURLConnection urlConnection = (HttpURLConnection) u.openConnection();
 

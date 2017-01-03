@@ -463,6 +463,7 @@ public class BTabFragment extends Fragment {
                     connection.setUseCaches(false);
                     connection.setDefaultUseCaches(false);
                     connection.setRequestProperty("tab", "B");
+                    connection.setRequestProperty("type", "photo");
                     connection.setRequestProperty("time", time);
                     connection.setRequestProperty("len", arrThumb.length + "");
                     connection.setRequestProperty("email", mEmail);

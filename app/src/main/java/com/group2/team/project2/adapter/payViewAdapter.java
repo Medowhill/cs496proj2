@@ -1,6 +1,7 @@
 package com.group2.team.project2.adapter;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,7 +59,7 @@ public class payViewAdapter extends BaseAdapter implements ListAdapter {
         for (int i = 0; i < debts.size(); i++) {
             PayDebt debt1 = debts.get(i);
             if (debt1.getEmail().equals(debt.getEmail()) && debt1.getAccount().equals(debt.getAccount())
-                    && debt1.getAmount().equals(debt.getAmount()) && debt1.getTime().equals(debt.getTime())) {
+                    && debt1.getAmount().equals(debt.getAmount())) {
                 debt1.setNew(true);
                 debtUpdated = debts.remove(i);
                 break;
@@ -68,6 +69,7 @@ public class payViewAdapter extends BaseAdapter implements ListAdapter {
             if (debts.get(j).isNew())
                 break;
         debts.add(j, debtUpdated);
+        Log.i("ds496test", debtUpdated + "");
 
         notifyDataSetChanged();
     }

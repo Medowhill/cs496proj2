@@ -2,7 +2,7 @@
     <string name="app_name">Project2</string>
     <string name="menu_main_logout">Logout</string>
     <string name="facebook_app_id">1819898281601617</string>
-    <string name="server_ip">52.78.240.193</string>
+    <string name="server_ip">143.248.49.156</string>
     <string name="server_port">3000</string>
     <string name="intent_action_broadcast_push">com.group2.team.proj2.broadcast_push</string>
 

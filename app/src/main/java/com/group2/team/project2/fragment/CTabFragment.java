@@ -65,10 +65,9 @@ public class CTabFragment extends Fragment {
     private LinearLayout layout;
 
     private static ArrayList<Integer> notifications = new ArrayList<>();
-    private static String mEmail, mName;
-    private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+    private String mEmail, mName;
+    private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd"), formatTimeStamp = new SimpleDateFormat("yyyyMMddhhmmssSSS");
     private ArrayList<Thread> threads = new ArrayList<>();
-    private ArrayList<ReceiveDebt> receiveDebts = new ArrayList<>();
     private ArrayList<String> sendEmails = new ArrayList<>(), mEmails = new ArrayList<>(), mNames = new ArrayList<>();
     private IntentFilter filter;
     private ListView payView;
@@ -333,9 +332,10 @@ public class CTabFragment extends Fragment {
                                     for (String email : emails)
                                         names.add(mNames.get(mEmails.indexOf(email)));
 
+                                    final String timeStamp = formatTimeStamp.format(Calendar.getInstance().getTime());
                                     addDebt(new ReceiveDebt(mName, getResources().getStringArray(R.array.c_add_banks)[spinner.getSelectedItemPosition()]
                                             + " " + editTextAccount.getText().toString(), editTextPerson.getText().toString(),
-                                            format.format(Calendar.getInstance().getTime()), emails, names));
+                                            format.format(Calendar.getInstance().getTime()), emails, names, timeStamp));
                                     alertDialog.dismiss();
                                 }
                             }
@@ -348,13 +348,13 @@ public class CTabFragment extends Fragment {
         return rootView;
     }
 
-    public void viewPay(JSONArray payArray) throws JSONException {
+    public void viewPay(JSONArray payArray) {
         //JSONArray 서버에서 받아옴 (name, account, amount, time)
         payAdapter = new payViewAdapter(payArray, mEmail);
         payView.setAdapter(payAdapter);
     }
 
-    public void viewReceive(JSONArray receiveArray) throws JSONException {
+    public void viewReceive(JSONArray receiveArray) {
         receiveAdapter = new receiveViewAdapter(receiveArray);
         receiveView.setAdapter(receiveAdapter);
     }
@@ -362,7 +362,7 @@ public class CTabFragment extends Fragment {
     private class receiveViewItemClickListener implements AdapterView.OnItemClickListener {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
-            ReceiveDebt receiveDebt = receiveAdapter.getItem(position);
+            final ReceiveDebt receiveDebt = receiveAdapter.getItem(position);
             View v = getActivity().getLayoutInflater().inflate(R.layout.dialog_receive, null);
             ListView list = (ListView) v.findViewById(R.id.receiveDetailView);
             final detailReceiveAdapter adapter = new detailReceiveAdapter(receiveDebt.getAmount(), receiveDebt.getNames(), receiveDebt.getPayed());
@@ -374,6 +374,7 @@ public class CTabFragment extends Fragment {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             receiveAdapter.update(position);
+                            solvePayed(receiveDebt);
                         }
                     })
                     .setNegativeButton(R.string.c_receive_negative, null)
@@ -404,8 +405,7 @@ public class CTabFragment extends Fragment {
             public void run() {
                 threads.add(this);
                 try {
-                    //URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
-                    URL url = new URL("http://143.248.49.156:3000");
+                    URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
                     connection.setRequestMethod("POST");
@@ -443,8 +443,7 @@ public class CTabFragment extends Fragment {
             public void run() {
                 threads.add(this);
                 try {
-                    //URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
-                    URL url = new URL("http://143.248.49.156:3000");
+                    URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
                     connection.setRequestMethod("GET");
@@ -486,8 +485,7 @@ public class CTabFragment extends Fragment {
             public void run() {
                 threads.add(this);
                 try {
-                    //URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
-                    URL url = new URL("http://143.248.49.156:3000");
+                    URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
                     connection.setRequestMethod("GET");
@@ -524,28 +522,15 @@ public class CTabFragment extends Fragment {
         }.start();
     }
 
-    private void receiveDebt(ReceiveDebt debt) {
-        final JSONObject object = new JSONObject();
-        try {
-            object.put("account", debt.getAccount());
-            object.put("amount", debt.getAmount());
-            object.put("time", debt.getTime());
-            object.put("name", debt.getName());
-            JSONArray array = new JSONArray();
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
     private void addDebt(ReceiveDebt debt) {
-        receiveDebts.add(debt);
+        receiveAdapter.add(debt);
         final JSONObject object = new JSONObject();
         try {
             object.put("account", debt.getAccount());
             object.put("amount", debt.getAmount());
             object.put("time", debt.getTime());
             object.put("name", debt.getName());
+            object.put("timestamp", debt.getTimeStamp());
 
             JSONArray array = new JSONArray();
             for (int i = 0; i < debt.getEmails().size(); i++) {
@@ -565,8 +550,7 @@ public class CTabFragment extends Fragment {
             public void run() {
                 threads.add(this);
                 try {
-                    //URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
-                    URL url = new URL("http://143.248.49.156:3000");
+                    URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
                     connection.setRequestMethod("POST");
@@ -606,6 +590,7 @@ public class CTabFragment extends Fragment {
             pay.setNew(false);
             payAdapter.add(0, pay);
         } else {
+            Log.i("cs496test", "update");
             payAdapter.update(pay);
         }
     }
@@ -616,8 +601,7 @@ public class CTabFragment extends Fragment {
             public void run() {
                 threads.add(this);
                 try {
-                    //URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
-                    URL url = new URL("http://143.248.49.156:3000");
+                    URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
                     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
                     connection.setRequestMethod("GET");
@@ -653,8 +637,56 @@ public class CTabFragment extends Fragment {
         }.start();
     }
 
-    public static void setUser(String name, String email) {
-        mName = name;
-        mEmail = email;
+    private void solvePayed(ReceiveDebt debt) {
+        final JSONObject object = new JSONObject();
+        try {
+            object.put("name", debt.getName());
+            object.put("amount", debt.getAmount());
+            object.put("account", debt.getAccount());
+            object.put("timestamp", debt.getTimeStamp());
+            JSONArray array = new JSONArray();
+            for (int i = 0; i < debt.getEmails().size(); i++) {
+                JSONObject obj = new JSONObject();
+                obj.put("payed", debt.getPayed()[i]);
+                array.put(obj);
+            }
+            object.put("people", array);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        new Thread() {
+            @Override
+            public void run() {
+                threads.add(this);
+                try {
+                    URL url = new URL("http://" + getString(R.string.server_ip) + ":" + getString(R.string.server_port));
+                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+                    connection.setRequestMethod("POST");
+                    connection.setDoOutput(true);
+                    connection.setDoInput(true);
+                    connection.setUseCaches(false);
+                    connection.setDefaultUseCaches(false);
+                    connection.setRequestProperty("tab", "C");
+                    connection.setRequestProperty("type", "pay");
+                    connection.setRequestProperty("email", mEmail);
+
+                    OutputStream outputStream = connection.getOutputStream();
+                    outputStream.write(object.toString().getBytes());
+                    outputStream.flush();
+                    outputStream.close();
+
+                    InputStream inputStream = connection.getInputStream();
+                    byte[] arr = new byte[inputStream.available()];
+                    inputStream.read(arr);
+                    inputStream.close();
+                } catch (MalformedURLException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                threads.remove(this);
+            }
+        }.start();
     }
 }

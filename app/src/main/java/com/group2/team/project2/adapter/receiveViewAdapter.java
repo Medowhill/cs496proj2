@@ -1,6 +1,5 @@
 package com.group2.team.project2.adapter;
 
-import android.app.Activity;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -43,7 +42,8 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
                         allpayed = false;
                 }
 
-                ReceiveDebt debt = new ReceiveDebt(pay_json.getString("name"), pay_json.getString("account"), pay_json.getString("amount"), pay_json.getString("time"), emailList, nameList, payedList, allpayed);
+                ReceiveDebt debt = new ReceiveDebt(pay_json.getString("name"), pay_json.getString("account"),
+                        pay_json.getString("amount"), pay_json.getString("time"), emailList, nameList, payedList, allpayed, pay_json.getString("timestamp"));
                 if (debt.getAllPayed()) {
                     debts.add(payedStart, debt);
                 } else {
@@ -69,6 +69,11 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
     @Override
     public long getItemId(int position) {
         return position;
+    }
+
+    public void add(ReceiveDebt debt) {
+        debts.add(0, debt);
+        notifyDataSetChanged();
     }
 
     public void update(int position) {
@@ -136,9 +141,9 @@ public class receiveViewAdapter extends BaseAdapter implements ListAdapter {
 
         if (debt.getAllPayed()) {
             receive_background.setVisibility(View.VISIBLE);
-            notifyDataSetChanged();
+        } else {
+            receive_background.setVisibility(View.INVISIBLE);
         }
-
 
         return convertView;
     }
