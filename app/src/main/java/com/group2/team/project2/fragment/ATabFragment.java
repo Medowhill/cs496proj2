@@ -16,14 +16,11 @@ import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -111,7 +108,6 @@ public class ATabFragment extends Fragment {
         postButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                dialog = ProgressDialog.show(getContext(), "", "Please wait", true);
                 try {
                     CrawlPostView();
                 } catch (JSONException e) {
@@ -151,7 +147,7 @@ public class ATabFragment extends Fragment {
                 public void onClick(DialogInterface dialog, int which) {
                     Intent intent = new Intent(Intent.ACTION_VIEW);
                     try {
-                        intent.setData(Uri.parse("sms:"+contactArray.getJSONObject(position).getString("mobile_number")));
+                        intent.setData(Uri.parse("sms:" + contactArray.getJSONObject(position).getString("mobile_number")));
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -164,7 +160,7 @@ public class ATabFragment extends Fragment {
                 public void onClick(DialogInterface dialog, int which) {
                     Intent intent = new Intent(Intent.ACTION_DIAL);
                     try {
-                        intent.setData(Uri.parse("tel:"+contactArray.getJSONObject(position).getString("mobile_number")));
+                        intent.setData(Uri.parse("tel:" + contactArray.getJSONObject(position).getString("mobile_number")));
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
@@ -358,9 +354,8 @@ public class ATabFragment extends Fragment {
                 new GraphRequest.Callback() {
                     public void onCompleted(GraphResponse response) {
                         JSONObject obj = response.getJSONObject();
-                        Log.d("RESPONSE", response + "");
-                        Log.d("RESPONSE", obj + "");
-
+                        if (obj == null)
+                            return;
                         try {
                             JSONArray arr = obj.getJSONArray("data");
                             for (int i = 0; i < arr.length(); i++) {
@@ -389,7 +384,6 @@ public class ATabFragment extends Fragment {
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
-                            dismissDialogHandler.sendEmptyMessage(0);
                         }
                     }
                 }
